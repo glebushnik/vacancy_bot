@@ -588,7 +588,35 @@ async def process_vacancy_sending(message: Message, data,vacancy):
 @router.message(F.text)
 async def any_message_handler(message: Message, state: FSMContext):
     current_state = await state.get_state()
+    print(current_state)
+    if current_state in ["VacancySurvey:choosing_category", "VacancySurvey:location", "VacancySurvey:choosing_subject_area", "VacancySurvey:timezone"]:  # Замените на нужное состояние
+        await message.answer("Пожалуйста, используйте кнопки для ввода.", reply_markup= ReplyKeyboardRemove())
 
-    if current_state in ["VacancySurvey:choosing_category", "VacancySurvey:subject_area", "VacancySurvey:timezone", "VacancySurvey:grade"]:  # Замените на нужное состояние
-        await message.answer("Пожалуйста, используйте кнопки для ввода.")
+        if current_state == "VacancySurvey:choosing_category":
+            await process_vacancy_code(message, state)
+        if current_state == "VacancySurvey:location":
+            await message.answer(
+                "Выберите грейд. Это поле можно пропустить.",
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[
+                        [
+                            KeyboardButton(text="Пропустить этот пункт"),
+                        ]
+                    ],
+                    resize_keyboard=True,
+                ),
+            )
+            await message.answer(
+                "Доступные варианты грейдов:",
+                reply_markup=make_inline_keyboard(available_grades),
+            )
+            await state.set_state(VacancySurvey.location)
 
+        if current_state == "VacancySurvey:timezone":
+            await cmd_location(message, state)
+        if current_state == "VacancySurvey:choosing_subject_area":
+            await cmd_subject_area(message, state)
+    else:
+        await message.answer(
+            "Я не знаю такой команды,\nнапишите /start"
+        )
