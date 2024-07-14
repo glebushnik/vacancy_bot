@@ -496,42 +496,45 @@ async def cmd_tags(message: Message, state: FSMContext):
 
 @router.message(VacancySurvey.finish)
 async def finish_state(message: Message, state: FSMContext):
+    correct_input = True
     if message.text!="Пропустить этот пункт":
         if all(word.startswith('#') for word in message.text.split()):
             await state.update_data(tags=message.text)
         else:
+            correct_input = False
             previous_state=await go_back(state)
             await state.set_state(previous_state)
             await message.answer(f"Введите каждый тег через #")
-            await send_prompt_for_state(state, message, False)
+            await send_prompt_for_state(state, message, correct_input)
     else:
         await state.update_data(tags="")
-    data = await state.get_data()
-    result = f"Ваша вакансия:\n"\
-            f"Название вакансии: {data['vacancy_name']}\n"\
-            f"Код вакансии: {data['vacancy_code']}\n"\
-            f"Категория: {data['category']}\n"\
-            f"Название компании: {data['company_name']}\n"\
-            f"URL компании: {data['company_url']}\n"\
-            f"Грейд: {data['grade']}\n"\
-            f"Локация: {data['location']}\n"\
-            f"Часовой пояс: {data['timezone']}\n"\
-            f"Предметные области: {data['subjects']}\n"\
-            f"Формат работы: {data['job_format']}\n"\
-            f"Тема проекта: {data['project_theme']}\n"\
-            f"Зарплата: {data['salary']}\n"\
-            f"Обязанности: {data['responsibilities']}\n"\
-            f"Требования: {data['requirements']}\n"\
-            f"Задачи: {data['tasks']}\n"\
-            f"Пожелания: {data['wishes']}\n"\
-            f"Бонусы: {data['bonus']}\n"\
-            f"Контактные данные: {data['contacts']}\n"\
-            f"Теги: {data['tags']}\n"
-    await message.answer(
-            result,
-            reply_markup=ReplyKeyboardRemove()
-    )
-    await process_vacancy_sending(message, data, result)
+    if correct_input:
+        data = await state.get_data()
+        result = f"Ваша вакансия:\n"\
+                f"Название вакансии: {data['vacancy_name']}\n"\
+                f"Код вакансии: {data['vacancy_code']}\n"\
+                f"Категория: {data['category']}\n"\
+                f"Название компании: {data['company_name']}\n"\
+                f"URL компании: {data['company_url']}\n"\
+                f"Грейд: {data['grade']}\n"\
+                f"Локация: {data['location']}\n"\
+                f"Часовой пояс: {data['timezone']}\n"\
+                f"Предметные области: {data['subjects']}\n"\
+                f"Формат работы: {data['job_format']}\n"\
+                f"Тема проекта: {data['project_theme']}\n"\
+                f"Зарплата: {data['salary']}\n"\
+                f"Обязанности: {data['responsibilities']}\n"\
+                f"Требования: {data['requirements']}\n"\
+                f"Задачи: {data['tasks']}\n"\
+                f"Пожелания: {data['wishes']}\n"\
+                f"Бонусы: {data['bonus']}\n"\
+                f"Контактные данные: {data['contacts']}\n"\
+                f"Теги: {data['tags']}\n"
+        await message.answer(
+                result,
+                reply_markup=ReplyKeyboardRemove()
+        )
+        await process_vacancy_sending(message, data, result)
 
 @router.message(VacancySurvey.send_vacancy)
 async def process_vacancy_sending(message: Message, data,vacancy):
