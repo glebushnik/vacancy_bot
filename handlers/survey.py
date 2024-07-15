@@ -162,7 +162,7 @@ async def back_command(message: Message, state: FSMContext) -> None:
 async def cmd_vacancy_name(message: Message, state: FSMContext) -> None:
     await state.set_state(VacancySurvey.vacancy_name)
     await message.answer(
-        text = "Чтобы вернуться к предыдущему шагу, введите /back"
+        text = "Чтобы вернуться к предыдущему шагу,\nвведите /back"
     )
     await message.answer(
         text="Введите название вакансии-позиции. Например, Системный аналитик на проект внедрения CRM.",
@@ -174,6 +174,9 @@ async def cmd_vacancy_name(message: Message, state: FSMContext) -> None:
 async def process_vacancy_name(message: Message, state: FSMContext) -> None:
     await state.update_data(vacancy_name=message.text)
     await state.set_state(VacancySurvey.vacancy_code)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         "Хорошо, теперь введите код вакансии. Например, DAT-617.\nЭто поле можно пропустить.",
         reply_markup=ReplyKeyboardMarkup(
@@ -192,7 +195,10 @@ async def process_vacancy_code(message: Message, state: FSMContext):
     else: await state.update_data(vacancy_code="")
     await state.set_state(VacancySurvey.choosing_category)
     await message.answer(
-        "Хорошо, теперь выберите категорию позиции. Это поле обязательно.",
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        "Хорошо, теперь выберите категорию позиции.\nЭто поле обязательно.",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
@@ -214,13 +220,19 @@ async def category_chosen(callback_query: CallbackQuery, state: FSMContext):
 @router.message(VacancySurvey.company_name)
 async def cmd_company_name(message: Message, state: FSMContext):
     await message.answer(
-        "Следующий пункт - название компании. Это поле обязательно."
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        "Следующий пункт - название компании.\nЭто поле обязательно."
     )
     await state.set_state(VacancySurvey.company_url)
 
 @router.message(VacancySurvey.company_url)
 async def cmd_company_url(message: Message, state: FSMContext):
     await state.update_data(company_name=message.text)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         "Хорошо, теперь введите сайт вашей организации. Например: https:/domen.ru/www.domen.ru/http://domen.ru/domen.ru/домен.рф\nЭто поле можно пропустить.",
         reply_markup=ReplyKeyboardMarkup(
@@ -247,13 +259,16 @@ async def cmd_grade(message: Message, state: FSMContext):
                 is_correct_input=False
                 previous_state = await go_back(state)
                 await state.set_state(previous_state)
-                await message.answer(f"Введите корректный сайт компании, например, kremlin.ru")
+                await message.answer(f"Введите корректный сайт компании, например, kremlin.ru", reply_markup= ReplyKeyboardRemove())
                 await send_prompt_for_state(state, message, False)
             else:
                 await state.update_data(company_url=message.text)
         else:
             await state.update_data(company_url="")
     if is_correct_input:
+        await message.answer(
+            text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+        )
         await message.answer(
             "Выберите грейд. Это поле можно пропустить.",
             reply_markup=ReplyKeyboardMarkup(
@@ -275,7 +290,10 @@ async def cmd_grade(message: Message, state: FSMContext):
 async def grade_skipped(message: Message, state: FSMContext):
     await state.update_data(grade="")
     await message.answer(
-        "Следующий пункт - локация. Это поле обязательно.",
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        "Следующий пункт - локация.\nЭто поле обязательно.",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
@@ -296,7 +314,10 @@ async def grade_chosen(callback_query: CallbackQuery, state: FSMContext):
 
 async def cmd_location(message: Message, state: FSMContext):
     await message.answer(
-        "Следующий пункт - локация. Это поле обязательно.",
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        "Следующий пункт - локация.\nЭто поле обязательно.",
         reply_markup=ReplyKeyboardRemove()
     )
     await message.answer(
@@ -317,7 +338,10 @@ async def location_chosen(callback_query: CallbackQuery, state: FSMContext):
 
 async def cmd_timezone(message: Message, state: FSMContext):
     await message.answer(
-        text="Следующий пункт: город и/или часовой пояс. Это поле обязательно."
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        text="Следующий пункт: город и/или часовой пояс.\nЭто поле обязательно."
     )
     await state.set_state(VacancySurvey.subject_area)
 
@@ -326,6 +350,9 @@ async def cmd_subject_area(message: Message, state:FSMContext):
     global selected_subjects
     selected_subjects = []
     await state.update_data(timezone=message.text)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         text="Следующий пункт: предметная область. Это поле обязательно.\n\nДоступные варианты:",
         reply_markup=make_inline_keyboard(available_subject_areas)
@@ -379,18 +406,27 @@ async def skip_subject_area(message: Message, state: FSMContext):
     await cmd_job_format(message, state)
 
 async def cmd_job_format(message: Message, state: FSMContext):
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer("Следующий пункт - формат работы. Например, гибрид.\nЭто поле обязательно.")
     await state.set_state(VacancySurvey.project_theme)
 
 @router.message(VacancySurvey.project_theme)
 async def cmd_project_theme(message: Message, state: FSMContext):
     await state.update_data(job_format=message.text)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer("Следующий пункт - тематика проекта. Например, нейросети.\nЭто поле обязательно.")
     await state.set_state(VacancySurvey.salary)
 
 @router.message(VacancySurvey.salary)
 async def cmd_salary(message: Message, state: FSMContext):
     await state.update_data(project_theme=message.text)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         "Хорошо, теперь введите зарплату. Например, 100000₽.\nЭто поле можно пропустить.",
         reply_markup=ReplyKeyboardMarkup(
@@ -409,7 +445,10 @@ async def skip_salary(message: Message, state: FSMContext):
     if message.text!="Пропустить этот пункт": await state.update_data(salary=message.text)
     else: await state.update_data(salary="")
     await message.answer(
-        "Следующий пункт - ключевая зона ответственности. Например, разработка требований и проектирование интеграций.\n\nЭто поле обязательно.",
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
+        "Следующий пункт - ключевая зона ответственности. Например, разработка требований и проектирование интеграций.\nЭто поле обязательно.",
         reply_markup=ReplyKeyboardRemove()
     )
     await state.set_state(VacancySurvey.requirements)
@@ -418,6 +457,9 @@ async def skip_salary(message: Message, state: FSMContext):
 async def cmd_requirements(message: Message, state: FSMContext):
     await state.update_data(responsibilities=message.text)
     await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
         "Следующий пункт - требования. Например, быть онлайн 24/7.\nЭто поле обязательно.",
     )
     await state.set_state(VacancySurvey.tasks)
@@ -425,6 +467,9 @@ async def cmd_requirements(message: Message, state: FSMContext):
 @router.message(VacancySurvey.tasks)
 async def cmd_tasks(message: Message, state: FSMContext):
     await state.update_data(requirements=message.text)
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         "Хорошо, теперь введите основные задачи. Например, писать код.\nЭто поле можно пропустить.",
         reply_markup=ReplyKeyboardMarkup(
@@ -443,6 +488,9 @@ async def cmd_wishes(message: Message, state: FSMContext):
     if message.text!="Пропустить этот пункт": await state.update_data(tasks=message.text)
     else: await state.update_data(tasks="")
     await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
         "Хорошо, теперь введите пожелания. Например, Английский C1.\nЭто поле можно пропустить.",
     )
     await state.set_state(VacancySurvey.bonus)
@@ -452,6 +500,9 @@ async def cmd_bonus(message: Message, state: FSMContext):
     if message.text!="Пропустить этот пункт": await state.update_data(wishes=message.text)
     else: await state.update_data(wishes="")
     await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
+    await message.answer(
         "Теперь введите бонусы. Например, мерч.\nЭто поле можно пропустить.",
     )
     await state.set_state(VacancySurvey.contacts)
@@ -460,6 +511,9 @@ async def cmd_bonus(message: Message, state: FSMContext):
 async def cmd_contacts(message: Message, state: FSMContext):
     if message.text != "Пропустить этот пункт": await state.update_data(bonus=message.text)
     else: await state.update_data(bonus="")
+    await message.answer(
+        text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+    )
     await message.answer(
         "Следующий пункт - контакты. Например, @telegramuser Ivan Ivanov, CEO.\nЭто поле обязательно.",
         reply_markup=ReplyKeyboardRemove()
@@ -482,6 +536,9 @@ async def cmd_tags(message: Message, state: FSMContext):
         await state.set_state(VacancySurvey.finish)
         if is_contacts:
             await state.update_data(contacts=message.text)
+        await message.answer(
+            text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+        )
         await message.answer(
             "Хорошо, теперь теги. Например, #интеграция, #B2B, #SaaS, #API\nЭто поле можно пропустить.",
             reply_markup=ReplyKeyboardMarkup(
@@ -532,57 +589,101 @@ async def finish_state(message: Message, state: FSMContext):
                 f"Теги: {data['tags']}\n"
         await message.answer(
                 result,
-                reply_markup=ReplyKeyboardRemove()
+                reply_markup=ReplyKeyboardMarkup(
+                    keyboard=[
+                        [
+                            KeyboardButton(text="Заполнить анкету заново."),
+                            KeyboardButton(text="Опубликовать анкету.")
+                        ]
+                    ],
+                    resize_keyboard=True,
+                )
         )
-        await process_vacancy_sending(message, data, result)
+        await state.set_state(VacancySurvey.send_vacancy)
+
 
 @router.message(VacancySurvey.send_vacancy)
-async def process_vacancy_sending(message: Message, data,vacancy):
-    channel = routing(data)
-    chat_id = channel["chat_id"]
-    message_text = vacancy
-    message_thread_id = channel["message_thread_id"]
-    chat_id_without_at = channel['chat_id'].replace("@", "")
-    existing_message = collection.find_one({"description": message_text})
-    if existing_message:
-        await message.answer(
-            "Такая вакансия уже есть! Заполните ее заново",
-            reply_markup=ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="/start"),
-                ]
-            ],
-            resize_keyboard=True,
+async def process_vacancy_sending(message: Message, state: FSMContext):
+    data = await state.get_data()
+    result = f"Ваша вакансия:\n" \
+             f"Название вакансии: {data['vacancy_name']}\n" \
+             f"Код вакансии: {data['vacancy_code']}\n" \
+             f"Категория: {data['category']}\n" \
+             f"Название компании: {data['company_name']}\n" \
+             f"URL компании: {data['company_url']}\n" \
+             f"Грейд: {data['grade']}\n" \
+             f"Локация: {data['location']}\n" \
+             f"Часовой пояс: {data['timezone']}\n" \
+             f"Предметные области: {data['subjects']}\n" \
+             f"Формат работы: {data['job_format']}\n" \
+             f"Тема проекта: {data['project_theme']}\n" \
+             f"Зарплата: {data['salary']}\n" \
+             f"Обязанности: {data['responsibilities']}\n" \
+             f"Требования: {data['requirements']}\n" \
+             f"Задачи: {data['tasks']}\n" \
+             f"Пожелания: {data['wishes']}\n" \
+             f"Бонусы: {data['bonus']}\n" \
+             f"Контактные данные: {data['contacts']}\n" \
+             f"Теги: {data['tags']}\n"
+    if message.text == 'Опубликовать анкету.':
+        channel = routing(data)
+        chat_id = channel["chat_id"]
+        message_text = result
+        message_thread_id = channel["message_thread_id"]
+        chat_id_without_at = channel['chat_id'].replace("@", "")
+        existing_message = collection.find_one({"description": message_text})
+        if existing_message:
+            await message.answer(
+                "Такая вакансия уже есть! Заполните ее заново",
+                reply_markup=ReplyKeyboardMarkup(
+                keyboard=[
+                    [
+                        KeyboardButton(text="/start"),
+                    ]
+                ],
+                resize_keyboard=True,
+                )
             )
-        )
+        else:
+            await message.answer(
+                f"Анкета отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
+            )
+
+            url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+            data = {
+                "chat_id": chat_id,
+                "text": message_text,
+                "message_thread_id": message_thread_id
+            }
+
+            response = requests.post(url, data=data)
+
+            message_data = {"description": message_text}
+            collection.insert_one(message_data)
+            await message.answer(
+                "Заполните еще одну вакансию!",
+                reply_markup=ReplyKeyboardMarkup(
+                keyboard=[
+                    [
+                        KeyboardButton(text="/start"),
+                    ]
+                ],
+                resize_keyboard=True,
+            )
+            )
     else:
-        await message.answer(
-            f"Анкета отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
-        )
-
-        url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-        data = {
-            "chat_id": chat_id,
-            "text": message_text,
-            "message_thread_id": message_thread_id
-        }
-
-        response = requests.post(url, data=data)
-
-        message_data = {"description": message_text}
-        collection.insert_one(message_data)
         await message.answer(
             "Заполните еще одну вакансию!",
             reply_markup=ReplyKeyboardMarkup(
-            keyboard=[
-                [
-                    KeyboardButton(text="/start"),
-                ]
-            ],
-            resize_keyboard=True,
+                keyboard=[
+                    [
+                        KeyboardButton(text="/start"),
+                    ]
+                ],
+                resize_keyboard=True,
+            )
         )
-        )
+
 
 
 @router.message(F.text)
