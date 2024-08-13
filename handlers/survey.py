@@ -11,6 +11,7 @@ from keyboards.inline_row import make_inline_keyboard
 from utils.logic import routing
 import requests
 import pymongo
+import textwrap
 from aiogram.types import KeyboardButton
 
 router=Router()
@@ -567,32 +568,70 @@ async def finish_state(message: Message, state: FSMContext):
         await state.update_data(tags="")
     if correct_input:
         data = await state.get_data()
-        result = f"Ваша вакансия:\n"\
-                f"Название вакансии: {data['vacancy_name']}\n"\
-                f"Код вакансии: {data['vacancy_code']}\n"\
-                f"Категория: {data['category']}\n"\
-                f"Название компании: {data['company_name']}\n"\
-                f"URL компании: {data['company_url']}\n"\
-                f"Грейд: {data['grade']}\n"\
-                f"Локация: {data['location']}\n"\
-                f"Часовой пояс: {data['timezone']}\n"\
-                f"Предметные области: {data['subjects']}\n"\
-                f"Формат работы: {data['job_format']}\n"\
-                f"Тема проекта: {data['project_theme']}\n"\
-                f"Зарплата: {data['salary']}\n"\
-                f"Обязанности: {data['responsibilities']}\n"\
-                f"Требования: {data['requirements']}\n"\
-                f"Задачи: {data['tasks']}\n"\
-                f"Пожелания: {data['wishes']}\n"\
-                f"Бонусы: {data['bonus']}\n"\
-                f"Контактные данные: {data['contacts']}\n"\
-                f"Теги: {data['tags']}\n"
+        max_width = 50
+
+        result = f"Ваша вакансия:\n"
+
+        result += f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
+
+        if data['vacancy_code']:
+            result += f"<b>Код вакансии</b>: {data['vacancy_code']}\n"
+
+        result += f"<b>Категория</b>: {data['category']}\n"
+
+        result += f"<b>Название компании</b>: {data['company_name']}\n"
+
+        if data['company_url']:
+            result += f"<b>URL компании</b>: {data['company_url']}\n"
+
+        if data['grade']:
+            result += f"<b>Грейд</b>: {data['grade']}\n"
+
+        result += f"<b>Локация</b>: {data['location']}\n"
+
+        result += f"<b>Часовой пояс</b>: {data['timezone']}\n"
+
+        result += f"<b>Предметные области</b>: {data['subjects']}\n"
+
+        result += f"<b>Формат работы</b>: {data['job_format']}\n"
+
+        result += f"<b>Тема проекта</b>: {data['project_theme']}\n"
+
+        if data['salary']:
+            result += f"<b>Зарплата</b>: {data['salary']}\n"
+
+        # Проверка и перенос для всех полей, начиная с "Обязанности"
+        if data['responsibilities']:
+            wrapped_responsibilities = textwrap.wrap(data['responsibilities'], width=max_width)
+            result += f"<b>Обязанности</b>:\n" + '\n'.join(wrapped_responsibilities) + "\n"
+
+        if data['requirements']:
+            wrapped_requirements = textwrap.wrap(data['requirements'], width=max_width)
+            result += f"<b>Требования</b>:\n" + '\n'.join(wrapped_requirements) + "\n"
+
+        if data['tasks']:
+            wrapped_tasks = textwrap.wrap(data['tasks'], width=max_width)
+            result += f"<b>Задачи</b>:\n" + '\n'.join(wrapped_tasks) + "\n"
+
+        if data['wishes']:
+            wrapped_wishes = textwrap.wrap(data['wishes'], width=max_width)
+            result += f"<b>Пожелания</b>:\n" + '\n'.join(wrapped_wishes) + "\n"
+
+        if data['bonus']:
+            wrapped_bonus = textwrap.wrap(data['bonus'], width=max_width)
+            result += f"<b>Бонусы</b>:\n" + '\n'.join(wrapped_bonus) + "\n"
+
+        result += f"<b>Контактные данные</b>: {data['contacts']}\n"
+
+        if data['tags']:
+            wrapped_tags = textwrap.wrap(data['tags'], width=max_width)
+            result += f"<b>Теги</b>:\n" + '\n'.join(wrapped_tags) + "\n"
         await message.answer(
                 result,
                 reply_markup=ReplyKeyboardMarkup(
                     keyboard=[
                         [
-                            KeyboardButton(text="Заполнить анкету заново."),
+                            KeyboardButton(text="/start"),
                             KeyboardButton(text="Опубликовать анкету.")
                         ]
                     ],
@@ -605,26 +644,64 @@ async def finish_state(message: Message, state: FSMContext):
 @router.message(VacancySurvey.send_vacancy)
 async def process_vacancy_sending(message: Message, state: FSMContext):
     data = await state.get_data()
-    result = f"Ваша вакансия:\n" \
-             f"Название вакансии: {data['vacancy_name']}\n" \
-             f"Код вакансии: {data['vacancy_code']}\n" \
-             f"Категория: {data['category']}\n" \
-             f"Название компании: {data['company_name']}\n" \
-             f"URL компании: {data['company_url']}\n" \
-             f"Грейд: {data['grade']}\n" \
-             f"Локация: {data['location']}\n" \
-             f"Часовой пояс: {data['timezone']}\n" \
-             f"Предметные области: {data['subjects']}\n" \
-             f"Формат работы: {data['job_format']}\n" \
-             f"Тема проекта: {data['project_theme']}\n" \
-             f"Зарплата: {data['salary']}\n" \
-             f"Обязанности: {data['responsibilities']}\n" \
-             f"Требования: {data['requirements']}\n" \
-             f"Задачи: {data['tasks']}\n" \
-             f"Пожелания: {data['wishes']}\n" \
-             f"Бонусы: {data['bonus']}\n" \
-             f"Контактные данные: {data['contacts']}\n" \
-             f"Теги: {data['tags']}\n"
+
+    max_width = 50
+
+    result = f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
+
+    if data['vacancy_code']:
+        result += f"<b>Код вакансии</b>: {data['vacancy_code']}\n"
+
+    result += f"<b>Категория</b>: {data['category']}\n"
+
+    result += f"<b>Название компании</b>: {data['company_name']}\n"
+
+    if data['company_url']:
+        result += f"<b>URL компании</b>: {data['company_url']}\n"
+
+    if data['grade']:
+        result += f"<b>Грейд</b>: {data['grade']}\n"
+
+    result += f"<b>Локация</b>: {data['location']}\n"
+
+    result += f"<b>Часовой пояс</b>: {data['timezone']}\n"
+
+    result += f"<b>Предметные области</b>: {data['subjects']}\n"
+
+    result += f"<b>Формат работы</b>: {data['job_format']}\n"
+
+    result += f"<b>Тема проекта</b>: {data['project_theme']}\n"
+
+    if data['salary']:
+        result += f"<b>Зарплата</b>: {data['salary']}\n"
+
+    # Проверка и перенос для всех полей, начиная с "Обязанности"
+    if data['responsibilities']:
+        wrapped_responsibilities = textwrap.wrap(data['responsibilities'], width=max_width)
+        result += f"<b>Обязанности</b>:\n" + '\n'.join(wrapped_responsibilities) + "\n"
+
+    if data['requirements']:
+        wrapped_requirements = textwrap.wrap(data['requirements'], width=max_width)
+        result += f"<b>Требования</b>:\n" + '\n'.join(wrapped_requirements) + "\n"
+
+    if data['tasks']:
+        wrapped_tasks = textwrap.wrap(data['tasks'], width=max_width)
+        result += f"<b>Задачи</b>:\n" + '\n'.join(wrapped_tasks) + "\n"
+
+    if data['wishes']:
+        wrapped_wishes = textwrap.wrap(data['wishes'], width=max_width)
+        result += f"<b>Пожелания</b>:\n" + '\n'.join(wrapped_wishes) + "\n"
+
+    if data['bonus']:
+        wrapped_bonus = textwrap.wrap(data['bonus'], width=max_width)
+        result += f"<b>Бонусы</b>:\n" + '\n'.join(wrapped_bonus) + "\n"
+
+    result += f"<b>Контактные данные</b>: {data['contacts']}\n"
+
+    if data['tags']:
+        wrapped_tags = textwrap.wrap(data['tags'], width=max_width)
+        result += f"<b>Теги</b>:\n" + '\n'.join(wrapped_tags) + "\n"
+
     if message.text == 'Опубликовать анкету.':
         channel = routing(data)
         chat_id = channel["chat_id"]
