@@ -1,10 +1,19 @@
-// init-mongo.js
+db = db.getSiblingDB('vacancy_bot');
 
-// Подключение к административной базе данных
-const adminDb = db.getSiblingDB('admin');
+db.createCollection('vacancies');
 
-// Аутентификация с учетными данными root
-adminDb.auth('admin', 'admin');
+db.vacancies.insert([
+  {
+    id: 1,
+    description: 'Описание вакансии 1'
+  },
+  {
+    id: 2,
+    description: 'Описание вакансии 2'
+  },
+  {
+    id: 3,
+    description: 'Описание вакансии 3'
+  }
+]);
 
-// Создание базы данных и коллекции
-adminDb.getSiblingDB('vacancy_bot').createCollection('vacancies');
