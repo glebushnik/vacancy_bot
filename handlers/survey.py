@@ -640,6 +640,8 @@ async def finish_state(message: Message, state: FSMContext):
         )
         await state.set_state(VacancySurvey.send_vacancy)
 
+        print(result)
+
 
 @router.message(VacancySurvey.send_vacancy)
 async def process_vacancy_sending(message: Message, state: FSMContext):
@@ -705,10 +707,9 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
     if message.text == 'Опубликовать анкету.':
         channel = routing(data)
         chat_id = channel["chat_id"]
-        message_text = result
         message_thread_id = channel["message_thread_id"]
         chat_id_without_at = channel['chat_id'].replace("@", "")
-        existing_message = collection.find_one({"description": message_text})
+        existing_message = collection.find_one({"description": result})
         if existing_message:
             await message.answer(
                 "Такая вакансия уже есть! Заполните ее заново",
@@ -722,20 +723,26 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                 )
             )
         else:
-            await message.answer(
-                f"Анкета отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
-            )
+            if channel['message_thread_id'] != None:
+                await message.answer(
+                    f"Анкета отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
+                )
+            else:
+                await message.answer(
+                    f"Анкета отправлена в чат: t.me/{chat_id_without_at}"
+                )
 
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
             data = {
                 "chat_id": chat_id,
-                "text": message_text,
-                "message_thread_id": message_thread_id
+                "text": result,
+                "message_thread_id": message_thread_id,
+                "parse_mode": "HTML"
             }
 
             response = requests.post(url, data=data)
 
-            message_data = {"description": message_text}
+            message_data = {"description": result}
             collection.insert_one(message_data)
             await message.answer(
                 "Заполните еще одну вакансию!",
