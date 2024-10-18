@@ -148,27 +148,33 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
 
 @router.message(Command("back"))
 async def back_command(message: Message, state: FSMContext) -> None:
-    current_state=await state.get_state()
-    print(current_state)
-    previous_state = await go_back(state)
-    print(previous_state)
-    if previous_state:
-        await state.set_state(previous_state)
-        await message.answer(f"Возвращаюсь к предыдущему шагу.")
-        await send_prompt_for_state(state, message)
+    if message.chat.id < 0:
+        pass
     else:
-        await message.answer("Вы находитесь в начале опроса.")
+        current_state=await state.get_state()
+        print(current_state)
+        previous_state = await go_back(state)
+        print(previous_state)
+        if previous_state:
+            await state.set_state(previous_state)
+            await message.answer(f"Возвращаюсь к предыдущему шагу.")
+            await send_prompt_for_state(state, message)
+        else:
+            await message.answer("Вы находитесь в начале опроса.")
 
 @router.message(Command("survey"))
 async def cmd_vacancy_name(message: Message, state: FSMContext) -> None:
-    await state.set_state(VacancySurvey.vacancy_name)
-    await message.answer(
-        text = "Чтобы вернуться к предыдущему шагу,\nвведите /back"
-    )
-    await message.answer(
-        text="Введите название вакансии-позиции. Например, Системный аналитик на проект внедрения CRM.",
-        reply_markup=ReplyKeyboardRemove(),
-    )
+    if message.chat.id < 0:
+        pass
+    else:
+        await state.set_state(VacancySurvey.vacancy_name)
+        await message.answer(
+            text = "Чтобы вернуться к предыдущему шагу,\nвведите /back"
+        )
+        await message.answer(
+            text="Введите название вакансии-позиции. Например, Системный аналитик на проект внедрения CRM.",
+            reply_markup=ReplyKeyboardRemove(),
+        )
 
 
 @router.message(VacancySurvey.vacancy_name)

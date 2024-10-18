@@ -27,8 +27,11 @@ dp = Dispatcher(storage=MemoryStorage())
 
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
-    await message.answer(f"Привет, {html.bold(message.from_user.full_name)}!\nЯ - бот, который поможет тебе создать вакансию и опубликовать ее.", reply_markup= ReplyKeyboardRemove())
-    await message.answer("\nВведи /survey, если хочешь начать заполнение.")
+    if message.chat.id < 0:
+        pass
+    else:
+        await message.answer(f"Привет, {html.bold(message.from_user.full_name)}!\nЯ - бот, который поможет тебе создать вакансию и опубликовать ее.", reply_markup= ReplyKeyboardRemove())
+        await message.answer("\nВведи /survey, если хочешь начать заполнение.")
 
 
 
