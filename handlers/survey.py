@@ -639,17 +639,18 @@ async def cmd_tags(message: Message, state: FSMContext):
 @router.message(VacancySurvey.finish)
 async def finish_state(message: Message, state: FSMContext):
     correct_input = True
-    if message.text != "Пропустить этот пункт" and message.text != "/back":
-        if all(word.startswith('#') for word in message.text.split()):
-            await state.update_data(tags=message.text)
+    if message.text != "Выберите поле, которое хотите отредактировать.\n\nДоступные варианты:":
+        if message.text != "Пропустить этот пункт" and message.text != "/back":
+            if all(word.startswith('#') for word in message.text.split()):
+                await state.update_data(tags=message.text)
+            else:
+                correct_input = False
+                previous_state = await go_back(state)
+                await state.set_state(previous_state)
+                await message.answer(f"Введите каждый тег через #")
+                await send_prompt_for_state(state, message, correct_input)
         else:
-            correct_input = False
-            previous_state = await go_back(state)
-            await state.set_state(previous_state)
-            await message.answer(f"Введите каждый тег через #")
-            await send_prompt_for_state(state, message, correct_input)
-    else:
-        await state.update_data(tags="")
+            await state.update_data(tags="")
     if correct_input:
         data = await state.get_data()
         max_width = 50
@@ -861,10 +862,6 @@ async def edit_vacancy(message: Message, state: FSMContext):
     await message.answer(
         text="Выберите поле, которое хотите отредактировать.\n\nДоступные варианты:",
         reply_markup=make_inline_keyboard(variants)
-    )
-    await message.reply(
-        text="Чтобы вернуться к анкете, введите /back.",
-        reply_markup=ReplyKeyboardRemove()
     )
     await state.set_state(VacancySurvey.edit_field)
 
