@@ -506,6 +506,8 @@ async def skip_salary(message: Message, state: FSMContext):
 async def cmd_requirements(message: Message, state: FSMContext):
     if message.text != "/back" and message.text != "Пропустить этот пункт":
         await state.update_data(responsibilities=message.text)
+    else:
+        await state.update_data(responsibilities="")
     await message.answer(
         text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
     )
