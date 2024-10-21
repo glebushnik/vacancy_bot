@@ -6,7 +6,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
-from utils.variants import available_categories, available_grades, available_locations, available_subject_areas
+from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
+    variants, data_dict
 from keyboards.inline_row import make_inline_keyboard
 from utils.logic import routing
 import requests
@@ -34,6 +35,9 @@ collection = db[DB_COLLECTION_NAME]
 
 
 class VacancySurvey(StatesGroup):
+    update_edited_field = State()
+    edit_field = State()
+    edit_vacancy = State()
     send_vacancy = State()
     finish = State()
     tags = State()
@@ -80,6 +84,9 @@ state_order = {
     18: VacancySurvey.contacts,
     19: VacancySurvey.tags,
     20: VacancySurvey.finish,
+    21: VacancySurvey.edit_vacancy,
+    22: VacancySurvey.edit_field,
+    23: VacancySurvey.update_edited_field
 }
 
 
@@ -98,6 +105,8 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
     print(current_state)
     if current_state == "VacancySurvey.vacancy_name":
         await cmd_vacancy_name(message, state)
+    elif current_state == "VacancySurvey.edit_vacancy":
+        await finish_state(message, state)
     elif current_state == "VacancySurvey.vacancy_code":
         await process_vacancy_name(message, state)
     elif current_state == "VacancySurvey.choosing_category":
@@ -513,7 +522,8 @@ async def cmd_requirements(message: Message, state: FSMContext):
     )
     await message.answer(
         "Следующий пункт — <b>требования</b>. Например, быть онлайн 24/7."
-        " Здесь указываются <b>обязательные</b> требования к кандидату. Поле для <b>пожеланий</b> и основных задач будет предложено "
+        "Здесь указываются <b>обязательные</b> требования к кандидату. Поле для <b>пожеланий</b> и основных задач "
+        "будет предложено"
         "для заполнения далее.\n"
         "Это поле обязательное.",
         parse_mode='HTML'
@@ -523,7 +533,7 @@ async def cmd_requirements(message: Message, state: FSMContext):
 
 @router.message(VacancySurvey.tasks)
 async def cmd_tasks(message: Message, state: FSMContext):
-    if message.text != "/back" and message.text!= "Пропустить этот пункт":
+    if message.text != "/back" and message.text != "Пропустить этот пункт":
         await state.update_data(requirements=message.text)
     else:
         await state.update_data(requirements="")
@@ -706,7 +716,8 @@ async def finish_state(message: Message, state: FSMContext):
                 keyboard=[
                     [
                         KeyboardButton(text="/start"),
-                        KeyboardButton(text="Опубликовать анкету.")
+                        KeyboardButton(text="Опубликовать анкету."),
+                        KeyboardButton(text="Редактировать анкету."),
                     ]
                 ],
                 resize_keyboard=True,
@@ -777,8 +788,10 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
     if data['tags']:
         wrapped_tags = textwrap.wrap(data['tags'], width=max_width)
         result += f"<b>Теги</b>:\n" + '\n'.join(wrapped_tags) + "\n"
-
-    if message.text == 'Опубликовать анкету.':
+    if message.text == 'Редактировать анкету.':
+        await state.set_state(VacancySurvey.edit_vacancy)
+        await edit_vacancy(message, state)
+    elif message.text == 'Опубликовать анкету.':
         channel = routing(data)
         chat_id = channel["chat_id"]
         message_thread_id = channel["message_thread_id"]
@@ -843,13 +856,77 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
         )
 
 
+@router.message(VacancySurvey.edit_vacancy)
+async def edit_vacancy(message: Message, state: FSMContext):
+    await message.answer(
+        text="Выберите поле, которое хотите отредактировать.\n\nДоступные варианты:",
+        reply_markup=make_inline_keyboard(variants)
+    )
+    await message.reply(
+        text="Чтобы вернуться к анкете, введите /back.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+    await state.set_state(VacancySurvey.edit_field)
+
+
+@router.callback_query(VacancySurvey.edit_field)
+async def edit_field(query: CallbackQuery, state: FSMContext):
+    print("Query data:", query.data)  # Отладка
+    if query.data == "Вернуться к анкете.":
+        await state.set_state(VacancySurvey.finish)
+        await finish_state(query.message, state)
+    else:
+        data = await state.get_data()
+        if query.data in data_dict:
+            editing_field_key = data_dict[query.data]
+            current_value = data.get(editing_field_key)
+
+            if current_value != "":
+                await query.message.answer(
+                    text=f"Сейчас поле {query.data} выглядит так: {current_value}."
+                )
+            else:
+                await query.message.answer(
+                    text=f"Сейчас поле {query.data} не заполнено."
+                )
+
+            # Устанавливаем состояние ожидания ввода
+            await state.set_state(VacancySurvey.update_edited_field)
+            # Сохраняем ключ редактируемого поля в состояние
+            await state.update_data(editing_field_key=editing_field_key)
+
+            # Запрашиваем новое значение
+            await query.message.answer(
+                text="Заполните поле заново.",
+                reply_markup=ReplyKeyboardRemove()
+            )
+        else:
+            await query.message.answer(text="Неизвестное поле для редактирования.")
+
+
+@router.message(VacancySurvey.update_edited_field)
+async def update_edited_field(message: Message, state: FSMContext):
+    # Получаем ключ редактируемого поля из состояния
+    data = await state.get_data()
+    editing_field_key = data.get('editing_field_key')
+
+    # Обновляем данные с новым значением
+    await state.update_data(**{editing_field_key: message.text})
+
+    await message.reply(
+        text="Отлично, сохранил отредактированное поле."
+    )
+
+    # Возвращаемся к состоянию завершения или к анкете
+    await state.set_state(VacancySurvey.finish)
+    await edit_vacancy(message, state)
 @router.message(F.text)
 async def any_message_handler(message: Message, state: FSMContext):
     current_state = await state.get_state()
     print(current_state)
     if current_state in ["VacancySurvey:choosing_category", "VacancySurvey:location",
                          "VacancySurvey:choosing_subject_area",
-                         "VacancySurvey:timezone"]:  # Замените на нужное состояние
+                         "VacancySurvey:timezone"]:
         await message.answer("Пожалуйста, используйте кнопки для ввода.", reply_markup=ReplyKeyboardRemove())
 
         if current_state == "VacancySurvey:choosing_category":
