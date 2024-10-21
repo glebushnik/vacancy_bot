@@ -512,19 +512,21 @@ async def cmd_requirements(message: Message, state: FSMContext):
         text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
     )
     await message.answer(
-        "Следующий пункт — **требования**. Например, быть онлайн 24/7.\n"
-        "Здесь указываются **обязательные** требования к кандидату. Поле для **пожеланий** и основных задач будет "
-        "предложено"
+        "Следующий пункт — <b>требования</b>. Например, быть онлайн 24/7."
+        " Здесь указываются <b>обязательные</b> требования к кандидату. Поле для <b>пожеланий</b> и основных задач будет предложено "
         "для заполнения далее.\n"
         "Это поле обязательное.",
+        parse_mode='HTML'
     )
     await state.set_state(VacancySurvey.tasks)
 
 
 @router.message(VacancySurvey.tasks)
 async def cmd_tasks(message: Message, state: FSMContext):
-    if message.text != "/back":
+    if message.text != "/back" and message.text!= "Пропустить этот пункт":
         await state.update_data(requirements=message.text)
+    else:
+        await state.update_data(requirements="")
     await message.answer(
         text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
     )
