@@ -653,7 +653,6 @@ async def finish_state(message: Message, state: FSMContext):
             await state.update_data(tags="")
     if correct_input:
         data = await state.get_data()
-        max_width = 50
 
         result = f"Ваша вакансия:\n"
 
@@ -685,32 +684,26 @@ async def finish_state(message: Message, state: FSMContext):
         if data['salary']:
             result += f"<b>Зарплата</b>: {data['salary']}\n"
 
-        # Проверка и перенос для всех полей, начиная с "Обязанности"
         if data['responsibilities']:
-            wrapped_responsibilities = textwrap.wrap(data['responsibilities'], width=max_width)
-            result += f"<b>Обязанности</b>:\n" + '\n'.join(wrapped_responsibilities) + "\n"
+            result += f"<b>Обязанности</b>:\n" + data['responsibilities'] + "\n"
 
         if data['requirements']:
-            wrapped_requirements = textwrap.wrap(data['requirements'], width=max_width)
-            result += f"<b>Требования</b>:\n" + '\n'.join(wrapped_requirements) + "\n"
+            result += f"<b>Требования</b>:\n" + data['requirements'] + "\n"
 
         if data['tasks']:
-            wrapped_tasks = textwrap.wrap(data['tasks'], width=max_width)
-            result += f"<b>Задачи</b>:\n" + '\n'.join(wrapped_tasks) + "\n"
+            result += f"<b>Задачи</b>:\n" + data['tasks'] + "\n"
 
         if data['wishes']:
-            wrapped_wishes = textwrap.wrap(data['wishes'], width=max_width)
-            result += f"<b>Пожелания</b>:\n" + '\n'.join(wrapped_wishes) + "\n"
+            result += f"<b>Пожелания</b>:\n" + data['wishes'] + "\n"
 
         if data['bonus']:
-            wrapped_bonus = textwrap.wrap(data['bonus'], width=max_width)
-            result += f"<b>Бонусы</b>:\n" + '\n'.join(wrapped_bonus) + "\n"
+            result += f"<b>Бонусы</b>:\n" + data['bonus'] + "\n"
 
         result += f"<b>Контактные данные</b>: {data['contacts']}\n"
 
         if data['tags']:
-            wrapped_tags = textwrap.wrap(data['tags'], width=max_width)
-            result += f"<b>Теги</b>:\n" + '\n'.join(wrapped_tags) + "\n"
+            result += f"<b>Теги</b>:\n" + data['tags'] + "\n"
+
         await message.answer(
             result,
             reply_markup=ReplyKeyboardMarkup(
@@ -733,9 +726,9 @@ async def finish_state(message: Message, state: FSMContext):
 async def process_vacancy_sending(message: Message, state: FSMContext):
     data = await state.get_data()
 
-    max_width = 50
+    result = f"Ваша вакансия:\n"
 
-    result = f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
+    result += f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
 
     if data['vacancy_code']:
         result += f"<b>Код вакансии</b>: {data['vacancy_code']}\n"
@@ -763,32 +756,26 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
     if data['salary']:
         result += f"<b>Зарплата</b>: {data['salary']}\n"
 
-    # Проверка и перенос для всех полей, начиная с "Обязанности"
     if data['responsibilities']:
-        wrapped_responsibilities = textwrap.wrap(data['responsibilities'], width=max_width)
-        result += f"<b>Обязанности</b>:\n" + '\n'.join(wrapped_responsibilities) + "\n"
+        result += f"<b>Обязанности</b>:\n" + data['responsibilities'] + "\n"
 
     if data['requirements']:
-        wrapped_requirements = textwrap.wrap(data['requirements'], width=max_width)
-        result += f"<b>Требования</b>:\n" + '\n'.join(wrapped_requirements) + "\n"
+        result += f"<b>Требования</b>:\n" + data['requirements'] + "\n"
 
     if data['tasks']:
-        wrapped_tasks = textwrap.wrap(data['tasks'], width=max_width)
-        result += f"<b>Задачи</b>:\n" + '\n'.join(wrapped_tasks) + "\n"
+        result += f"<b>Задачи</b>:\n" + data['tasks'] + "\n"
 
     if data['wishes']:
-        wrapped_wishes = textwrap.wrap(data['wishes'], width=max_width)
-        result += f"<b>Пожелания</b>:\n" + '\n'.join(wrapped_wishes) + "\n"
+        result += f"<b>Пожелания</b>:\n" + data['wishes'] + "\n"
 
     if data['bonus']:
-        wrapped_bonus = textwrap.wrap(data['bonus'], width=max_width)
-        result += f"<b>Бонусы</b>:\n" + '\n'.join(wrapped_bonus) + "\n"
+        result += f"<b>Бонусы</b>:\n" + data['bonus'] + "\n"
 
     result += f"<b>Контактные данные</b>: {data['contacts']}\n"
 
     if data['tags']:
-        wrapped_tags = textwrap.wrap(data['tags'], width=max_width)
-        result += f"<b>Теги</b>:\n" + '\n'.join(wrapped_tags) + "\n"
+        result += f"<b>Теги</b>:\n" + data['tags'] + "\n"
+
     if message.text == 'Редактировать анкету.':
         await state.set_state(VacancySurvey.edit_vacancy)
         await edit_vacancy(message, state)
