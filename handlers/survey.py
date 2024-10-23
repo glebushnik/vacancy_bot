@@ -654,7 +654,7 @@ async def finish_state(message: Message, state: FSMContext):
     if correct_input:
         data = await state.get_data()
 
-        result = f"Ваша вакансия:\n"
+        result = f"Ваша анкета:\n"
 
         result += f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
 
