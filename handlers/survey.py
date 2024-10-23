@@ -521,9 +521,9 @@ async def cmd_requirements(message: Message, state: FSMContext):
         text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
     )
     await message.answer(
-        "Следующий пункт — <b>требования</b>. Например, быть онлайн 24/7."
+        "Следующий пункт — <b>требования</b>. Например, быть онлайн 24/7.\n"
         "Здесь указываются <b>обязательные</b> требования к кандидату. Поле для <b>пожеланий</b> и основных задач "
-        "будет предложено"
+        "будет предложено "
         "для заполнения далее.\n"
         "Это поле обязательное.",
         parse_mode='HTML'
@@ -726,7 +726,7 @@ async def finish_state(message: Message, state: FSMContext):
 async def process_vacancy_sending(message: Message, state: FSMContext):
     data = await state.get_data()
 
-    result = f"Ваша вакансия:\n"
+    result = ""
 
     result += f"<b>Название вакансии</b>: <b>{data['vacancy_name']}</b>\n"
 
