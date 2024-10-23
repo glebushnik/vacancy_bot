@@ -710,8 +710,8 @@ async def finish_state(message: Message, state: FSMContext):
                 keyboard=[
                     [
                         KeyboardButton(text="/start"),
-                        KeyboardButton(text="Опубликовать анкету"),
-                        KeyboardButton(text="Редактировать анкету"),
+                        KeyboardButton(text="Опубликовать вакансию"),
+                        KeyboardButton(text="Редактировать вакансию"),
                     ]
                 ],
                 resize_keyboard=True,
@@ -776,10 +776,10 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
     if data['tags']:
         result += f"<b>Теги</b>:\n" + data['tags'] + "\n"
 
-    if message.text == 'Редактировать анкету':
+    if message.text == 'Редактировать вакансию':
         await state.set_state(VacancySurvey.edit_vacancy)
         await edit_vacancy(message, state)
-    elif message.text == 'Опубликовать анкету':
+    elif message.text == 'Опубликовать вакансию':
         channel = routing(data)
         chat_id = channel["chat_id"]
         message_thread_id = channel["message_thread_id"]
@@ -800,11 +800,11 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
         else:
             if channel['message_thread_id'] != None:
                 await message.answer(
-                    f"Анкета отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
+                    f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
                 )
             else:
                 await message.answer(
-                    f"Анкета отправлена в чат: t.me/{chat_id_without_at}"
+                    f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                 )
 
             url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
@@ -856,7 +856,7 @@ async def edit_vacancy(message: Message, state: FSMContext):
 @router.callback_query(VacancySurvey.edit_field)
 async def edit_field(query: CallbackQuery, state: FSMContext):
     print("Query data:", query.data)  # Отладка
-    if query.data == "Вернуться к анкете.":
+    if query.data == "Вернуться к вакансии":
         await state.set_state(VacancySurvey.finish)
         await finish_state(query.message, state)
     else:
