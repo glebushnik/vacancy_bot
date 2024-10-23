@@ -776,10 +776,10 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
     if data['tags']:
         result += f"<b>Теги</b>:\n" + data['tags'] + "\n"
 
-    if message.text == 'Редактировать анкету.':
+    if message.text == 'Редактировать анкету':
         await state.set_state(VacancySurvey.edit_vacancy)
         await edit_vacancy(message, state)
-    elif message.text == 'Опубликовать анкету.':
+    elif message.text == 'Опубликовать анкету':
         channel = routing(data)
         chat_id = channel["chat_id"]
         message_thread_id = channel["message_thread_id"]
