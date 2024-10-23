@@ -710,8 +710,8 @@ async def finish_state(message: Message, state: FSMContext):
                 keyboard=[
                     [
                         KeyboardButton(text="/start"),
-                        KeyboardButton(text="Опубликовать анкету."),
-                        KeyboardButton(text="Редактировать анкету."),
+                        KeyboardButton(text="Опубликовать анкету"),
+                        KeyboardButton(text="Редактировать анкету"),
                     ]
                 ],
                 resize_keyboard=True,
