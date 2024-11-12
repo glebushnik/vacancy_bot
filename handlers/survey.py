@@ -1,3 +1,4 @@
+import asyncio
 import os
 from aiogram.client.default import DefaultBotProperties
 from aiogram import Router, F, Bot
@@ -244,7 +245,7 @@ async def process_vacancy_code(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.in_(available_categories))
 async def category_chosen(callback_query: CallbackQuery, state: FSMContext):
-    if callback_query.chat.id < 0:
+    if callback_query.message.chat.id < 0:
         pass
     else:
         await state.update_data(category=callback_query.data)
@@ -362,7 +363,7 @@ async def grade_skipped(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.in_(available_grades))
 async def grade_chosen(callback_query: CallbackQuery, state: FSMContext):
-    if callback_query.chat.id < 0:
+    if callback_query.message.chat.id < 0:
         pass
     else:
         await state.update_data(grade=callback_query.data)
@@ -393,7 +394,7 @@ async def cmd_location(message: Message, state: FSMContext):
 
 @router.callback_query(F.data.in_(available_locations))
 async def location_chosen(callback_query: CallbackQuery, state: FSMContext):
-    if callback_query.chat.id < 0:
+    if callback_query.message.chat.id < 0:
         pass
     else:
         await state.update_data(location=callback_query.data)
@@ -438,7 +439,7 @@ async def cmd_subject_area(message: Message, state: FSMContext):
 
 @router.callback_query(VacancySurvey.choosing_subject_area)
 async def choosing_subject_area(call: CallbackQuery, state: FSMContext):
-    if call.chat.id < 0:
+    if call.message.chat.id < 0:
         pass
     else:
         global selected_subjects
@@ -794,15 +795,17 @@ async def finish_state(message: Message, state: FSMContext):
                     resize_keyboard=True,
                 )
             )
+            await state.update_data(result=result)
             await state.set_state(VacancySurvey.send_vacancy)
 
 
 @router.message(VacancySurvey.send_vacancy)
-async def process_vacancy_sending(message: Message, state: FSMContext, result: str):
+async def process_vacancy_sending(message: Message, state: FSMContext):
     if message.chat.id < 0:
         pass
     else:
         data = await state.get_data()
+        result = data['result']
         if message.text == 'Редактировать вакансию':
             await state.set_state(VacancySurvey.edit_vacancy)
             await edit_vacancy(message, state)
@@ -833,7 +836,7 @@ async def process_vacancy_sending(message: Message, state: FSMContext, result: s
                     await message.answer(
                         f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                     )
-
+                await asyncio.sleep(2)
                 await bot.send_message(
                     chat_id=chat_id,
                     text=result,
