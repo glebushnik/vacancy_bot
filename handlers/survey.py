@@ -836,14 +836,15 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                     await message.answer(
                         f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                     )
-                await asyncio.sleep(2)
-                await bot.send_message(
-                    chat_id=chat_id,
-                    text=result,
-                    message_thread_id=message_thread_id,
-                    parse_mode="HTML"
-                )
+                url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+                data = {
+                        "chat_id": chat_id,
+                        "text": result,
+                        "message_thread_id": message_thread_id,
+                        "parse_mode": "HTML"
+                    }
 
+                response = requests.post(url, data=data)
                 message_data = {"description": result}
                 collection.insert_one(message_data)
                 await message.answer(
