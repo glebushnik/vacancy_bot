@@ -4,6 +4,7 @@ import sys
 import os
 from dotenv import load_dotenv
 
+# Загружаем переменные окружения из .env файла
 load_dotenv()
 
 from handlers import survey
@@ -15,35 +16,52 @@ from aiogram.filters import CommandStart, Command
 from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardRemove
 
+# Создаем экземпляр Router для обработки команд и сообщений
 router = Router()
 
-# Bot token can be obtained via https://t.me/BotFather
+# Получаем токен бота из переменных окружения
 TOKEN = os.getenv("BOT_TOKEN")
 
-# All handlers should be attached to the Router (or Dispatcher)
-
+# Инициализируем диспетчер с памятью для хранения состояний
 dp = Dispatcher(storage=MemoryStorage())
 
 
+# Обработчик команды /start
 @dp.message(CommandStart())
 async def command_start_handler(message: Message):
+    # Проверяем, является ли чат группой или каналом (ID < 0)
     if message.chat.id < 0:
-        pass
+        pass  # Игнорируем группы и каналы
     else:
-        await message.answer(f"Привет, {html.bold(message.from_user.full_name)}!\nЯ — бот, который поможет тебе создать вакансию и опубликовать ее.", reply_markup= ReplyKeyboardRemove())
+        # Отправляем приветственное сообщение пользователю
+        await message.answer(
+            f"Привет, {html.bold(message.from_user.full_name)}!\nЯ — бот, который поможет тебе создать вакансию и опубликовать ее.",
+            reply_markup=ReplyKeyboardRemove())
         await message.answer("\nВведи /survey, если хочешь начать заполнение.")
 
 
-
+# Основная асинхронная функция для запуска бота
 async def main() -> None:
-    # Initialize Bot instance with default bot properties which will be passed to all API calls
+    # Инициализируем экземпляр бота с токеном и настройками по умолчанию
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
+    # Подключаем маршрутизатор с обработчиками
     dp.include_router(survey.router)
-    # And the run events dispatching
+
+    # Запускаем опрос событий (polling)
     await dp.start_polling(bot)
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO, stream=sys.stdout)
+    # Настройка логирования: выводим логи в файл main_logs.txt и на консоль
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(levelname)s - %(message)s',  # Формат логов с временем и уровнем важности
+        handlers=[
+            logging.FileHandler("main_logs.txt"),  # Запись логов в файл
+            logging.StreamHandler(sys.stdout)  # Вывод логов в консоль
+        ]
+    )
+
+    # Запускаем основную асинхронную функцию
     asyncio.run(main())
