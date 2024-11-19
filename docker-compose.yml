@@ -33,7 +33,9 @@ services:
       context: .
       dockerfile: Dockerfile
     volumes:
-      - .:/app  # Монтируем текущую директорию в контейнер, чтобы изменения были видны сразу
+      - .:/app  # Монтируем текущую директорию
+      - ./logs.txt:/app/logs.txt  # Привязываем локальный файл для логов
     depends_on:
-      - mongodb  # Убедитесь, что MongoDB запущен перед запуском приложения
-    restart: always  # Перезапускать контейнер в случае сбоя
+      - mongodb
+    restart: on-failure
+

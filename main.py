@@ -56,12 +56,14 @@ if __name__ == "__main__":
     # Настройка логирования: выводим логи в файл main_logs.txt и на консоль
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',  # Формат логов с временем и уровнем важности
+        format='%(asctime)s - %(levelname)s - %(message)s',
         handlers=[
-            logging.FileHandler("main_logs.txt"),  # Запись логов в файл
-            logging.StreamHandler(sys.stdout)  # Вывод логов в консоль
+            logging.FileHandler("logs.txt"),
+            logging.StreamHandler()  # Чтобы логи также выводились в консоль
         ]
     )
+
+    logging.info("Приложение запущено")
 
     # Запускаем основную асинхронную функцию
     asyncio.run(main())
