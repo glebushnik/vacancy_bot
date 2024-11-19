@@ -27,3 +27,13 @@ services:
       ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongodb:27017/
     depends_on:
       - mongodb
+
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app  # Монтируем текущую директорию в контейнер, чтобы изменения были видны сразу
+    depends_on:
+      - mongodb  # Убедитесь, что MongoDB запущен перед запуском приложения
+    restart: always  # Перезапускать контейнер в случае сбоя

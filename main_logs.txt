@@ -1,0 +1,10 @@
+2024-11-19 20:09:54,513 - INFO - Start polling
+2024-11-19 20:09:54,810 - INFO - Run polling for bot @PostAnalystJob_bot id=7272665628 - 'PostAnalystJob_bot'
+2024-11-19 20:09:55,334 - INFO - Update id=157156530 is handled. Duration 432 ms by bot id=7272665628
+2024-11-19 20:09:55,351 - INFO - Update id=157156532 is handled. Duration 449 ms by bot id=7272665628
+2024-11-19 20:09:55,401 - INFO - Update id=157156531 is handled. Duration 500 ms by bot id=7272665628
+2024-11-19 20:09:55,420 - INFO - Update id=157156529 is handled. Duration 519 ms by bot id=7272665628
+2024-11-19 20:10:15,795 - INFO - Update id=157156533 is handled. Duration 516 ms by bot id=7272665628
+2024-11-19 20:10:25,535 - WARNING - Received SIGTERM signal
+2024-11-19 20:10:25,537 - INFO - Polling stopped for bot @PostAnalystJob_bot id=7272665628 - 'PostAnalystJob_bot'
+2024-11-19 20:10:25,539 - INFO - Polling stopped
