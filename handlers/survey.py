@@ -20,21 +20,21 @@ from aiogram.types import KeyboardButton
 router = Router()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-DB_CLIENT_URI = os.getenv("DB_CLIENT_URI")
-DB_NAME = os.getenv("DB_NAME")
-DB_COLLECTION_NAME = os.getenv("DB_COLLECTION_NAME")
+# DB_CLIENT_URI = os.getenv("DB_CLIENT_URI")
+# DB_NAME = os.getenv("DB_NAME")
+# DB_COLLECTION_NAME = os.getenv("DB_COLLECTION_NAME")
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+#
+# MONGO_HOST = os.getenv("MONGO_HOST")
+# MONGO_PORT = os.getenv("MONGO_PORT")
+# MONGO_USER = os.getenv("MONGO_USER")
+# MONGO_PASS = os.getenv("MONGO_PASS")
 
-MONGO_HOST = os.getenv("MONGO_HOST")
-MONGO_PORT = os.getenv("MONGO_PORT")
-MONGO_USER = os.getenv("MONGO_USER")
-MONGO_PASS = os.getenv("MONGO_PASS")
-
-selected_subjects = []
-uri = "mongodb://{}:{}@{}:{}/{}?authSource=admin".format(MONGO_USER, MONGO_PASS, MONGO_HOST, MONGO_PORT, DB_NAME)
-client = pymongo.MongoClient(uri)
-db = client[DB_NAME]
-collection = db[DB_COLLECTION_NAME]
+# selected_subjects = []
+# uri = "mongodb://{}:{}@{}:{}/{}?authSource=admin".format(MONGO_USER, MONGO_PASS, MONGO_HOST, MONGO_PORT, DB_NAME)
+# client = pymongo.MongoClient(uri)
+# db = client[DB_NAME]
+# collection = db[DB_COLLECTION_NAME]
 
 
 class VacancySurvey(StatesGroup):
@@ -814,7 +814,8 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
             chat_id = channel["chat_id"]
             message_thread_id = channel["message_thread_id"]
             chat_id_without_at = channel['chat_id'].replace("@", "")
-            existing_message = collection.find_one({"description": result})
+            # existing_message = collection.find_one({"description": result})
+            existing_message=False
             if existing_message:
                 await message.answer(
                     "Такая вакансия уже есть! Заполните ее заново",
@@ -846,7 +847,7 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
 
                 response = requests.post(url, data=data)
                 message_data = {"description": result}
-                collection.insert_one(message_data)
+                # collection.insert_one(message_data)
                 await message.answer(
                     "Заполните еще одну вакансию!",
                     reply_markup=ReplyKeyboardMarkup(
