@@ -16,6 +16,7 @@ from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram import F, Router
 from aiogram.types import Message, ReplyKeyboardRemove
+from utils import logging_config
 
 # Создаем экземпляр Router для обработки команд и сообщений
 router = Router()
@@ -80,15 +81,9 @@ async def main() -> None:
 
 
 if __name__ == "__main__":
-    # Настройка логирования: выводим логи в файл main_logs.txt и на консоль
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        handlers=[
-            logging.FileHandler("logs.txt"),
-            logging.StreamHandler()  # Чтобы логи также выводились в консоль
-        ]
-    )
+    logging_config.setup_logging()
+
+    logger = logging.getLogger(__name__)
 
     logging.info("Приложение запущено")
 

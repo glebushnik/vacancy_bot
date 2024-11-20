@@ -1,33 +1,29 @@
-import logging
 import os
-from aiogram.client.default import DefaultBotProperties
-from aiogram import Router, F, Bot
-from aiogram.enums import ParseMode
+import logging
+from aiogram import Router, F
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
-
 from db_utils.db_handler import check_and_save_job
+from utils.logging_config import setup_logging
 from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
     variants, data_dict
 from keyboards.inline_row import make_inline_keyboard
 from utils.logic import routing
 import requests
-import pymongo
-import textwrap
 from aiogram.types import KeyboardButton
+
+
+setup_logging()
+logger = logging.getLogger(__name__)
+
 
 router = Router()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-logging.basicConfig(
-    filename='logs.txt',
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+
 
 
 class VacancySurvey(StatesGroup):
