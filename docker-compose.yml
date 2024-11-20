@@ -14,6 +14,8 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
       - ./initdb:/docker-entrypoint-initdb.d  # Монтирует директорию initdb
+    networks:
+      - analyst_job_bot  # Добавляем сеть
 
   adminer:
     image: adminer
@@ -22,6 +24,8 @@ services:
       - "8080:8080"  # Доступ к Adminer по порту 8080
     depends_on:
       - mysql
+    networks:
+      - analyst_job_bot  # Добавляем сеть
 
   python_app:
     build:
@@ -33,6 +37,12 @@ services:
     depends_on:
       - mysql
     restart: on-failure
+    networks:
+      - analyst_job_bot  # Добавляем сеть
 
 volumes:
   mysql_data:
+
+networks:
+  analyst_job_bot:
+    driver: bridge  # Используем драйвер bridge для сети
