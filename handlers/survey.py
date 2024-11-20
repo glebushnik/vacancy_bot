@@ -841,7 +841,7 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                     await message.answer(
                         f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                     )
-
+                print(f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}")
                 # Отправка сообщения в Telegram-чат
                 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                 data = {
