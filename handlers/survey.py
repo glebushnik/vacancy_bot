@@ -1,4 +1,4 @@
-import asyncio
+import logging
 import os
 from aiogram.client.default import DefaultBotProperties
 from aiogram import Router, F, Bot
@@ -23,20 +23,11 @@ router = Router()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-# DB_CLIENT_URI = os.getenv("DB_CLIENT_URI")
-# DB_NAME = os.getenv("DB_NAME")
-# DB_COLLECTION_NAME = os.getenv("DB_COLLECTION_NAME")
-#
-# MONGO_HOST = os.getenv("MONGO_HOST")
-# MONGO_PORT = os.getenv("MONGO_PORT")
-# MONGO_USER = os.getenv("MONGO_USER")
-# MONGO_PASS = os.getenv("MONGO_PASS")
-
-# selected_subjects = []
-# uri = "mongodb://{}:{}@{}:{}/{}?authSource=admin".format(MONGO_USER, MONGO_PASS, MONGO_HOST, MONGO_PORT, DB_NAME)
-# client = pymongo.MongoClient(uri)
-# db = client[DB_NAME]
-# collection = db[DB_COLLECTION_NAME]
+logging.basicConfig(
+    filename='logs.txt',
+    level=logging.INFO,
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
 
 class VacancySurvey(StatesGroup):
@@ -851,6 +842,8 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                     "parse_mode": "HTML"
                 }
                 response = requests.post(url, data=data)
+                logging.info(f'Response status code: {response.status_code}')
+                logging.info(f'Response body: {response.text}')
 
                 await message.answer(
                     "Заполните еще одну вакансию!",
