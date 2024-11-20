@@ -31,6 +31,30 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
+    ] and "медтех" in subject_area and location == "РФ":
+        return CHANNEL["Analyst_job_medtech"]
+    elif category in [
+        "бизнес-аналитик",
+        "аналитик бизнес-процессов",
+        "системный аналитик",
+        "system owner",
+        "проектировщик ИТ-решений",
+    ] and "стройтех" in subject_area and location == "РФ":
+        return CHANNEL["Analyst_job_proptech"]
+    elif category in [
+        "бизнес-аналитик",
+        "аналитик бизнес-процессов",
+        "системный аналитик",
+        "system owner",
+        "проектировщик ИТ-решений",
+    ] and "госсистемы" in subject_area and location == "РФ":
+        return CHANNEL["Analyst_job_gostech"]
+    elif category in [
+        "бизнес-аналитик",
+        "аналитик бизнес-процессов",
+        "системный аналитик",
+        "system owner",
+        "проектировщик ИТ-решений",
     ] and location == "РФ":
         return CHANNEL["Analyst_job_other"]
     else:

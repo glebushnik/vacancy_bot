@@ -8,6 +8,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
+
+from db_utils.db_handler import check_and_save_job
 from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
     variants, data_dict
 from keyboards.inline_row import make_inline_keyboard
@@ -20,10 +22,10 @@ from aiogram.types import KeyboardButton
 router = Router()
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
+bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 # DB_CLIENT_URI = os.getenv("DB_CLIENT_URI")
 # DB_NAME = os.getenv("DB_NAME")
 # DB_COLLECTION_NAME = os.getenv("DB_COLLECTION_NAME")
-bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 #
 # MONGO_HOST = os.getenv("MONGO_HOST")
 # MONGO_PORT = os.getenv("MONGO_PORT")
@@ -802,10 +804,11 @@ async def finish_state(message: Message, state: FSMContext):
 @router.message(VacancySurvey.send_vacancy)
 async def process_vacancy_sending(message: Message, state: FSMContext):
     if message.chat.id < 0:
-        pass
+        return
     else:
         data = await state.get_data()
         result = data['result']
+
         if message.text == 'Редактировать вакансию':
             await state.set_state(VacancySurvey.edit_vacancy)
             await edit_vacancy(message, state)
@@ -814,9 +817,10 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
             chat_id = channel["chat_id"]
             message_thread_id = channel["message_thread_id"]
             chat_id_without_at = channel['chat_id'].replace("@", "")
-            # existing_message = collection.find_one({"description": result})
-            existing_message=False
-            if existing_message:
+
+            # Проверка и вставка вакансии
+            db_result = check_and_save_job(data)
+            if not db_result:
                 await message.answer(
                     "Такая вакансия уже есть! Заполните ее заново",
                     reply_markup=ReplyKeyboardMarkup(
@@ -829,25 +833,25 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                     )
                 )
             else:
-                if channel['message_thread_id'] != None:
+                if message_thread_id is not None:
                     await message.answer(
-                        f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{channel['message_thread_id']}"
+                        f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}"
                     )
                 else:
                     await message.answer(
                         f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                     )
+
+                # Отправка сообщения в Telegram-чат
                 url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
                 data = {
-                        "chat_id": chat_id,
-                        "text": result,
-                        "message_thread_id": message_thread_id,
-                        "parse_mode": "HTML"
-                    }
-
+                    "chat_id": chat_id,
+                    "text": result,
+                    "message_thread_id": message_thread_id,
+                    "parse_mode": "HTML"
+                }
                 response = requests.post(url, data=data)
-                message_data = {"description": result}
-                # collection.insert_one(message_data)
+
                 await message.answer(
                     "Заполните еще одну вакансию!",
                     reply_markup=ReplyKeyboardMarkup(

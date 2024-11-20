@@ -1,8 +1,9 @@
 import asyncio
 import logging
-import sys
 import os
 from dotenv import load_dotenv
+import mysql.connector
+from mysql.connector import errorcode
 
 # Загружаем переменные окружения из .env файла
 load_dotenv()
@@ -25,6 +26,29 @@ TOKEN = os.getenv("BOT_TOKEN")
 # Инициализируем диспетчер с памятью для хранения состояний
 dp = Dispatcher(storage=MemoryStorage())
 
+# Функция для проверки подключения к базе данных
+def check_db_connection():
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT DATABASE();")  # Пытаемся выполнить запрос для проверки соединения
+        db = cursor.fetchone()
+        if db:
+            logging.info(f"Успешное подключение к базе данных: {db[0]}")
+        cursor.close()
+        conn.close()
+    except mysql.connector.Error as err:
+        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
+            logging.error("Ошибка доступа: неверное имя пользователя или пароль.")
+        elif err.errno == errorcode.ER_BAD_DB_ERROR:
+            logging.error("Ошибка: база данных не существует.")
+        else:
+            logging.error(f"Ошибка при подключении к базе данных: {err}")
 
 # Обработчик команды /start
 @dp.message(CommandStart())
@@ -42,6 +66,9 @@ async def command_start_handler(message: Message):
 
 # Основная асинхронная функция для запуска бота
 async def main() -> None:
+    # Проверка подключения к базе данных
+    check_db_connection()
+
     # Инициализируем экземпляр бота с токеном и настройками по умолчанию
     bot = Bot(token=TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
 
