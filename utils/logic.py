@@ -1,5 +1,6 @@
 from utils.channels import CHANNEL
 
+
 def routing(data):
     category = data['category']
     subject_area = data['subjects']
@@ -60,3 +61,16 @@ def routing(data):
     else:
         return CHANNEL["Analyst_job_other_countries"]
 
+
+def repeat_sending(data):
+    subject_area = data['subjects']
+    location = data['location']
+
+    if "medtech" in subject_area and location == "Не важно":
+        return CHANNEL["Analyst_job_medtech"]
+    elif "стройтех" in subject_area and location == "Не важно":
+        return CHANNEL["Analyst_job_proptech"]
+    elif "госсистемы" in subject_area and location == "Не важно":
+        return CHANNEL["Analyst_job_gostech"]
+    else:
+        return None

@@ -11,7 +11,7 @@ from utils.logging_config import setup_logging
 from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
     variants, data_dict
 from keyboards.inline_row import make_inline_keyboard
-from utils.logic import routing
+from utils.logic import routing, repeat_sending
 import requests
 from aiogram.types import KeyboardButton
 
@@ -126,6 +126,8 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
     elif current_state == "VacancySurvey.job_format":
         await cmd_subject_area(message, state)
     elif current_state == "VacancySurvey.project_theme":
+        global selected_subjects
+        selected_subjects = []
         await cmd_job_format(message, state)
     elif current_state == "VacancySurvey.salary":
         await cmd_project_theme(message, state)
@@ -168,6 +170,7 @@ async def back_command(message: Message, state: FSMContext) -> None:
             await send_prompt_for_state(state, message)
         else:
             await message.answer("Вы находитесь в начале опроса.")
+            await cmd_vacancy_name(message, state)
 
 
 @router.message(Command("survey"))
@@ -177,11 +180,39 @@ async def cmd_vacancy_name(message: Message, state: FSMContext) -> None:
     else:
         await state.set_state(VacancySurvey.vacancy_name)
         await message.answer(
-            text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
+            text=(
+                "<b>Все вакансии в нашей группе соответствуют форме:</b>\n\n"
+                "<b>Название:</b> [текст]\n"
+                "<b>Код вакансии:</b> [Код]\n"
+                "<b>Категория позиции:</b> [Список: аналитик 1С, BI-аналитик, аналитик данных, "
+                "продуктовый аналитик, бизнес-аналитик, аналитик бизнес-процессов, системный аналитик, "
+                "system owner, проектировщик ИТ-решений]\n"
+                "<b>Название компании:</b> [текст]\n"
+                "<b>Ссылка на сайт компании:</b> [домен]\n"
+                "<b>Уровень позиции:</b> [Junior/Middle/Senior/Lead]\n"
+                "<b>Локация кандидата:</b> [РФ, Казахстан, Беларусь, не важно]\n"
+                "<b>Город и/или тайм-зона:</b> [текст]\n"
+                "<b>Формат работы:</b> [Дистанционная, офис, гибрид]\n"
+                "<b>Предметная область проекта:</b> [Список: финтех, e-commerce, ритейл, логистика, "
+                "foodtech, edtech, стройтех, medtech, госсистемы, ERP, CRM, traveltech, авиация, другая]\n"
+                "<b>Тематика проекта:</b> [текст]\n"
+                "<b>Зарплата:</b> [текст]\n"
+                "<b>Ключевая ответственность:</b> [текст]\n"
+                "<b>Требования к кандидату:</b> [текст]\n"
+                "<b>Рабочие задачи:</b> [текст]\n"
+                "<b>Пожелания:</b> [текст]\n"
+                "<b>Бонусы:</b> [текст]\n"
+                "<b>Контакты:</b> [текст]\n"
+                "<b>Теги поста:</b> [текст]"
+            ),
+            parse_mode="HTML"
         )
         await message.answer(
             text="Введите название вакансии-позиции. Например, Системный аналитик на проект внедрения CRM.",
             reply_markup=ReplyKeyboardRemove(),
+        )
+        await message.answer(
+            text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
         )
 
 
@@ -452,9 +483,17 @@ async def choosing_subject_area(call: CallbackQuery, state: FSMContext):
                 ),
             )
         if len(selected_subjects) < 3:
-            await call.message.answer(
-                f"Вы выбрали: {subjects}. Пожалуйста, выберите еще {3 - len(selected_subjects)} вариант(а).",
-                reply_markup=make_inline_keyboard(available_subject_areas))
+            if "medtech" or "госсистемы" or "стройтех" in subjects:
+                await call.message.answer(f"Вы выбрали: {subjects}.",
+                                          reply_markup=ReplyKeyboardRemove())
+                await call.message.delete()
+                await state.set_state(VacancySurvey.job_format)
+                await cmd_job_format(call.message, state)
+                await state.update_data(subjects=subjects)
+            else:
+                await call.message.answer(
+                    f"Вы выбрали: {subjects}. Пожалуйста, выберите еще {3 - len(selected_subjects)} вариант(а).",
+                    reply_markup=make_inline_keyboard(available_subject_areas))
         else:
             await call.message.answer(f"Вы выбрали: {subjects}.",
                                       reply_markup=ReplyKeyboardRemove())
@@ -472,6 +511,7 @@ async def skip_subject_area(message: Message, state: FSMContext):
         global selected_subjects
         subjects = ' ,'.join(selected_subjects)
         if message.text != "/back":
+            selected_subjects = []
             await state.update_data(subjects=subjects)
 
         await message.answer(f"Вы выбрали:{subjects}",
@@ -800,11 +840,6 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
             await state.set_state(VacancySurvey.edit_vacancy)
             await edit_vacancy(message, state)
         elif message.text == 'Опубликовать вакансию':
-            channel = routing(data)
-            chat_id = channel["chat_id"]
-            message_thread_id = channel["message_thread_id"]
-            chat_id_without_at = channel['chat_id'].replace("@", "")
-
             # Проверка и вставка вакансии
             db_result = check_and_save_job(data)
             if not db_result:
@@ -820,26 +855,40 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                     )
                 )
             else:
-                if message_thread_id is not None:
-                    await message.answer(
-                        f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}"
-                    )
+                channel = routing(data)
+                chat_id = channel["chat_id"]
+                message_thread_id = channel["message_thread_id"]
+                chat_id_without_at = channel['chat_id'].replace("@", "")
+                repeat_channel = repeat_sending(data)
+                repeat_chat_id = repeat_channel["chat_id"]
+                repeat_message_thread_id = repeat_channel["message_thread_id"]
+                repeat_chat_id_without_at = repeat_channel['chat_id'].replace("@", "")
+                if not repeat_channel:
+                    if message_thread_id is not None:
+                        await message.answer(
+                            f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}"
+                        )
+                    else:
+                        await message.answer(
+                            f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
+                        )
                 else:
+                    if message_thread_id is not None:
+                        chat_link = f"t.me/{chat_id_without_at}/{message_thread_id}"
+                    else:
+                        chat_link = f"t.me/{chat_id_without_at}"
+
+                    if repeat_message_thread_id is not None:
+                        repeat_chat_link = f"t.me/{repeat_chat_id_without_at}/{repeat_message_thread_id}"
+                    else:
+                        repeat_chat_link = f"t.me/{repeat_chat_id_without_at}"
+
                     await message.answer(
-                        f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
+                        f"Вакансия отправлена в чаты: {chat_link} и {repeat_chat_link}"
                     )
-                print(f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}")
-                # Отправка сообщения в Telegram-чат
-                url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
-                data = {
-                    "chat_id": chat_id,
-                    "text": result,
-                    "message_thread_id": message_thread_id,
-                    "parse_mode": "HTML"
-                }
-                response = requests.post(url, data=data)
-                logging.info(f'Response status code: {response.status_code}')
-                logging.info(f'Response body: {response.text}')
+                    post_vacancy(repeat_chat_id, result, repeat_message_thread_id)
+
+                post_vacancy(chat_id, result, message_thread_id)
 
                 await message.answer(
                     "Заполните еще одну вакансию!",
@@ -968,3 +1017,17 @@ async def any_message_handler(message: Message, state: FSMContext):
             await message.answer(
                 "Я не знаю такой команды,\nнапишите /start"
             )
+
+
+def post_vacancy(chat_id, result, message_thread_id):
+    url = f"https://api.telegram.org/bot{BOT_TOKEN}/sendMessage"
+    data = {
+        "chat_id": chat_id,
+        "text": result,
+        "message_thread_id": message_thread_id,
+        "parse_mode": "HTML"
+    }
+
+    response = requests.post(url, data=data)
+    logging.info(f'Response status code: {response.status_code}')
+    logging.info(f'Response body: {response.text}')
