@@ -483,7 +483,7 @@ async def choosing_subject_area(call: CallbackQuery, state: FSMContext):
                 ),
             )
         if len(selected_subjects) < 3:
-            if "medtech" or "госсистемы" or "стройтех" in subjects:
+            if any(value in subjects for value in ["medtech", "госсистемы", "стройтех"]):
                 await call.message.answer(f"Вы выбрали: {subjects}.",
                                           reply_markup=ReplyKeyboardRemove())
                 await call.message.delete()
@@ -860,10 +860,7 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                 message_thread_id = channel["message_thread_id"]
                 chat_id_without_at = channel['chat_id'].replace("@", "")
                 repeat_channel = repeat_sending(data)
-                repeat_chat_id = repeat_channel["chat_id"]
-                repeat_message_thread_id = repeat_channel["message_thread_id"]
-                repeat_chat_id_without_at = repeat_channel['chat_id'].replace("@", "")
-                if not repeat_channel:
+                if repeat_channel is None:
                     if message_thread_id is not None:
                         await message.answer(
                             f"Вакансия отправлена в чат: t.me/{chat_id_without_at}/{message_thread_id}"
@@ -873,6 +870,9 @@ async def process_vacancy_sending(message: Message, state: FSMContext):
                             f"Вакансия отправлена в чат: t.me/{chat_id_without_at}"
                         )
                 else:
+                    repeat_chat_id = repeat_channel["chat_id"]
+                    repeat_message_thread_id = repeat_channel["message_thread_id"]
+                    repeat_chat_id_without_at = repeat_channel['chat_id'].replace("@", "")
                     if message_thread_id is not None:
                         chat_link = f"t.me/{chat_id_without_at}/{message_thread_id}"
                     else:
