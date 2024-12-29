@@ -5,7 +5,7 @@ services:
     image: mysql:8.0
     container_name: mysql_container
     environment:
-      MYSQL_DATABASE: analyst_job  # Создает базу данных server при запуске
+      MYSQL_DATABASE: analyst_job  
       MYSQL_ROOT_PASSWORD: Password12!
       MYSQL_USER: root
       MYSQL_PASSWORD: Password12!
@@ -13,26 +13,26 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-      - ./initdb:/docker-entrypoint-initdb.d  # Монтирует директорию initdb
+      - ./initdb:/docker-entrypoint-initdb.d
 
   adminer:
     image: adminer
     container_name: adminer_container
     ports:
-      - "8080:8080"  # Доступ к Adminer по порту 8080
+      - "8080:8080"
     depends_on:
       - mysql
 
-  python_app:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    volumes:
-      - .:/app  # Монтируем текущую директорию
-      - ./logs.txt:/app/logs.txt  # Привязываем локальный файл для логов
-    depends_on:
-      - mysql
-    restart: on-failure
+#  python_app:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    volumes:
+#      - .:/app
+#      - ./logs.txt:/app/logs.txt
+#    depends_on:
+#      - mysql
+#    restart: on-failure
 
 volumes:
   mysql_data:

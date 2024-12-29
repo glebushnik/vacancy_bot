@@ -6,24 +6,25 @@ USE analyst_job;
 
 -- Создание таблицы job
 CREATE TABLE IF NOT EXISTS job (
-    id BIGINT AUTO_INCREMENT PRIMARY KEY,  -- Автоинкрементный идентификатор
+    id BIGINT NOT NULL AUTO_INCREMENT,  -- Автоинкрементный идентификатор
     vacancy_name VARCHAR(255) NOT NULL,    -- Название вакансии
-    vacancy_code VARCHAR(50),              -- Код вакансии
-    category VARCHAR(100),                 -- Категория
+    vacancy_code VARCHAR(50) DEFAULT NULL,              -- Код вакансии
+    category VARCHAR(100) DEFAULT NULL,                 -- Категория
     company_name VARCHAR(255) NOT NULL,    -- Название компании
-    company_url VARCHAR(255),              -- URL компании
-    grade VARCHAR(50),                     -- Грейд
-    location VARCHAR(255),                 -- Локация
-    timezone VARCHAR(50),                  -- Часовой пояс
-    subjects VARCHAR(500),                 -- Предметные области
-    job_format VARCHAR(50),                -- Формат работы
-    project_theme VARCHAR(255),            -- Тема проекта
-    salary VARCHAR(50),                    -- Зарплата
-    responsibilities VARCHAR(1000),        -- Обязанности
-    requirements VARCHAR(1000),            -- Требования
-    tasks VARCHAR(1000),                   -- Задачи
-    wishes VARCHAR(1000),                  -- Пожелания
-    bonus VARCHAR(1000),                   -- Бонусы
-    contacts VARCHAR(255),                 -- Контактные данные
-    tags VARCHAR(255)                      -- Теги
+    company_url VARCHAR(255) DEFAULT NULL,              -- URL компании
+    grade VARCHAR(50) DEFAULT NULL,                     -- Грейд
+    location VARCHAR(255) DEFAULT NULL,                 -- Локация
+    timezone VARCHAR(50) DEFAULT NULL,                  -- Часовой пояс
+    subjects VARCHAR(500) DEFAULT NULL,                 -- Предметные области
+    job_format VARCHAR(50) DEFAULT NULL,                -- Формат работы
+    project_theme VARCHAR(255) DEFAULT NULL,            -- Тема проекта
+    salary VARCHAR(50) DEFAULT NULL,                    -- Зарплата
+    responsibilities TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,        -- Обязанности
+    requirements TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,            -- Требования
+    tasks TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,                   -- Задачи
+    wishes TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,                  -- Пожелания
+    bonus TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,                   -- Бонусы
+    contacts VARCHAR(255) DEFAULT NULL,                 -- Контактные данные
+    tags VARCHAR(255) DEFAULT NULL,                     -- Теги
+    is_posted TINYINT(1) DEFAULT NULL,                  -- Флаг публикации
 );
