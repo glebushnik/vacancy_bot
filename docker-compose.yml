@@ -23,16 +23,16 @@ services:
     depends_on:
       - mysql
 
-#  python_app:
-#    build:
-#      context: .
-#      dockerfile: Dockerfile
-#    volumes:
-#      - .:/app
-#      - ./logs.txt:/app/logs.txt
-#    depends_on:
-#      - mysql
-#    restart: on-failure
+  python_app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+      - ./logs.txt:/app/logs.txt
+    depends_on:
+      - mysql
+    restart: on-failure
 
 volumes:
   mysql_data:
