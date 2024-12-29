@@ -871,7 +871,7 @@ async def finish_state(message: Message, state: FSMContext):
 
                 if data['tags']:
                     tags=data['tags']
-                    valid_tags = '\n' + ' '.join(
+                    valid_tags = ' '.join(
                     f'#{word}' if not word.startswith('#') else word for word in tags.split())
                     result += f"\n" + valid_tags + "\n"
                 if len(str(result_output + result)) > 4096:
