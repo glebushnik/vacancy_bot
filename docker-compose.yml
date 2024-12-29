@@ -6,9 +6,9 @@ services:
     container_name: mysql_container
     environment:
       MYSQL_DATABASE: analyst_job  
-      MYSQL_ROOT_PASSWORD: Password12!
-      MYSQL_USER: root
-      MYSQL_PASSWORD: Password12!
+      MYSQL_ROOT_PASSWORD: user_password
+      MYSQL_USER: user
+      MYSQL_PASSWORD: user_password
     ports:
       - "3306:3306"
     volumes:

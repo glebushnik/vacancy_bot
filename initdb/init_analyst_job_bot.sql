@@ -6,7 +6,7 @@ USE analyst_job;
 
 -- Создание таблицы job
 CREATE TABLE IF NOT EXISTS job (
-    id BIGINT NOT NULL AUTO_INCREMENT,  -- Автоинкрементный идентификатор
+    id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,  -- Автоинкрементный идентификатор и первичный ключ
     vacancy_name VARCHAR(255) NOT NULL,    -- Название вакансии
     vacancy_code VARCHAR(50) DEFAULT NULL,              -- Код вакансии
     category VARCHAR(100) DEFAULT NULL,                 -- Категория
@@ -26,5 +26,5 @@ CREATE TABLE IF NOT EXISTS job (
     bonus TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,                   -- Бонусы
     contacts VARCHAR(255) DEFAULT NULL,                 -- Контактные данные
     tags VARCHAR(255) DEFAULT NULL,                     -- Теги
-    is_posted TINYINT(1) DEFAULT NULL,                  -- Флаг публикации
+    is_posted TINYINT(1) DEFAULT NULL                  -- Флаг публикации
 );
