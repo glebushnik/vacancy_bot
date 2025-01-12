@@ -4,25 +4,25 @@ from mysql.connector import errorcode
 import logging
 # Ограничения длины полей на основе вашей таблицы
 FIELD_MAX_LENGTHS = {
-    'vacancy_name': 255,
-    'vacancy_code': 50,
-    'category': 100,
-    'company_name': 255,
-    'company_url': 255,
-    'grade': 50,
-    'location': 255,
-    'timezone': 50,
-    'subjects': 500,
-    'job_format': 50,
-    'project_theme': 255,
-    'salary': 50,
-    'contacts': 255,
-    'tags': 255,
-    'responsibilities': 65535,  # Ограничение для TEXT поля
-    'requirements': 65535,      # Ограничение для TEXT поля
-    'tasks': 65535,             # Ограничение для TEXT поля
-    'wishes': 65535,            # Ограничение для TEXT поля
-    'bonus': 65535,             # Ограничение для TEXT поля
+    'vacancy_name': 255,       # VARCHAR(255)
+    'vacancy_code': 50,        # VARCHAR(50)
+    'category': 100,           # VARCHAR(100)
+    'company_name': 255,       # VARCHAR(255)
+    'company_url': 255,        # VARCHAR(255)
+    'grade': 50,               # VARCHAR(50)
+    'location': 255,           # VARCHAR(255)
+    'timezone': 100,           # VARCHAR(100)
+    'subjects': 500,           # VARCHAR(500)
+    'job_format': 250,         # VARCHAR(250)
+    'project_theme': 500,      # VARCHAR(500)
+    'salary': 250,             # VARCHAR(250)
+    'contacts': 255,           # VARCHAR(255)
+    'tags': 255,               # VARCHAR(255)
+    'responsibilities': 65535, # TEXT (максимум 65 535 символов)
+    'requirements': 65535,     # TEXT (максимум 65 535 символов)
+    'tasks': 65535,            # TEXT (максимум 65 535 символов)
+    'wishes': 65535,           # TEXT (максимум 65 535 символов)
+    'bonus': 65535,            # TEXT (максимум 65 535 символов)
 }
 
 def check_data_length(data):
@@ -34,11 +34,6 @@ def check_data_length(data):
 
 def check_and_save_job(data):
     try:
-        # Проверка длины данных перед вставкой
-        length_error = check_data_length(data)
-        if length_error:
-            return length_error
-
         # Устанавливаем подключение к базе данных
         conn = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
@@ -98,30 +93,27 @@ def check_and_save_job(data):
             ))
             conn.commit()
             logging.info(f"Вакансия '{data['vacancy_name']}' успешно сохранена с ID {cursor.lastrowid}.")
-            return cursor.lastrowid
+            return True, cursor.lastrowid  # Возвращаем True и ID новой записи
         else:
             logging.info(f"Вакансия '{data['vacancy_name']}' уже существует.")
-            return False
+            return False, "Вакансия уже существует."  # Возвращаем False и сообщение
 
     except mysql.connector.Error as err:
         if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            logging.error("Ошибка с именем пользователя или паролем")
-            return
+            error_msg = "Ошибка с именем пользователя или паролем"
         elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            logging.error("База данных не существует")
-            return
+            error_msg = "База данных не существует"
         elif err.errno == errorcode.ER_DUP_ENTRY:
-            logging.error("Ошибка: дублирующая запись. Вакансия с такими данными уже существует.")
-            return
+            error_msg = "дублирующая запись. Вакансия с такими данными уже существует."
         elif err.errno == errorcode.ER_NO_REFERENCED_ROW:
-            logging.error("Ошибка: нарушение ссылочной целостности. Проверьте корректность данных.")
-            return
+            error_msg = "нарушение ссылочной целостности. Проверьте корректность данных."
         elif err.errno == errorcode.ER_DATA_TOO_LONG:
-            logging.error("Ошибка: данные слишком длинные для одного из полей.")
-            return
+            error_msg = "данные слишком длинные для одного из полей."
         else:
-            logging.error(f"Произошла ошибка при сохранении вакансии: {err}")
-            return
+            error_msg = f"Произошла ошибка при сохранении вакансии: {err}"
+
+        logging.error(error_msg)
+        return False, error_msg
 
     finally:
         if 'cursor' in locals():

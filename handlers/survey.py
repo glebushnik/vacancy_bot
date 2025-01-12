@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
-from db_utils.db_handler import check_and_save_job, mark_job_as_posted
+from db_utils.db_handler import check_and_save_job, mark_job_as_posted, check_data_length
 from utils.logging_config import setup_logging
 from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
     variants, data_dict
@@ -847,25 +847,25 @@ async def finish_state(message: Message, state: FSMContext):
 
                 result += f"<b>Формат работы</b>: {data['job_format']}\n"
 
-                result += f"<b>Тема проекта</b>: {data['project_theme']}\n"
+                result += f"\n<b>Тема проекта</b>: {data['project_theme']}\n"
 
                 if data['salary']:
-                    result += f"<b>Зарплата</b>: {data['salary']}\n"
+                    result += f"\n<b>Зарплата</b>: {data['salary']}\n"
 
                 if data['responsibilities']:
                     result += f"\n<b>Обязанности</b>:\n" + data['responsibilities'] + "\n"
 
                 if data['requirements']:
-                    result += f"<b>Требования</b>:\n" + data['requirements'] + "\n"
+                    result += f"\n<b>Требования</b>:\n" + data['requirements'] + "\n"
 
                 if data['tasks']:
-                    result += f"<b>Задачи</b>:\n" + data['tasks'] + "\n"
+                    result += f"\n<b>Задачи</b>:\n" + data['tasks'] + "\n"
 
                 if data['wishes']:
-                    result += f"<b>Пожелания</b>:\n" + data['wishes'] + "\n"
+                    result += f"\n<b>Пожелания</b>:\n" + data['wishes'] + "\n"
 
                 if data['bonus']:
-                    result += f"<b>Бонусы</b>:\n" + data['bonus'] + "\n"
+                    result += f"\n<b>Бонусы</b>:\n" + data['bonus'] + "\n"
 
                 result += f"\n<b>Контактные данные</b>: {data['contacts']}\n"
 
@@ -881,6 +881,7 @@ async def finish_state(message: Message, state: FSMContext):
                             keyboard=[
                                 [
                                     KeyboardButton(text="/start"),
+                                    KeyboardButton(text="Редактировать вакансию")
                                 ]
                             ],
                             resize_keyboard=True,
@@ -902,8 +903,26 @@ async def finish_state(message: Message, state: FSMContext):
                     )
                 await state.update_data(result=result)
                 await state.set_state(VacancySurvey.send_vacancy)
-                job_id = check_and_save_job(data)
-                await state.update_data(job_id=job_id)
+                # Проверяем длину полей
+                field_validation = check_data_length(data)
+
+                if field_validation is None:
+                    # Если проверка длины прошла успешно, сохраняем данные
+                    status, result = check_and_save_job(data)
+                    if status:  # Если статус True, значит, запись успешно добавлена
+                        job_id = result  # result содержит lastrowid
+                        await state.update_data(job_id=job_id)  # Обновляем состояние
+                        await message.answer("Вакансия успешно сохранена.")
+                    else:  # Если статус False, значит, произошла ошибка
+                        error_message = result  # result содержит сообщение об ошибке
+                        await message.answer(f"Ошибка: {error_message}")
+                else:
+                    # Если проверка длины не прошла, выводим сообщение об ошибке
+                    await message.answer(
+                        field_validation + " Отредактируйте это поле.",
+                        reply_markup=None
+                    )
+
             else:
                 await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 

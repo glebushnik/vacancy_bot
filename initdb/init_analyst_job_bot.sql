@@ -14,11 +14,11 @@ CREATE TABLE IF NOT EXISTS job (
     company_url VARCHAR(255) DEFAULT NULL,              -- URL компании
     grade VARCHAR(50) DEFAULT NULL,                     -- Грейд
     location VARCHAR(255) DEFAULT NULL,                 -- Локация
-    timezone VARCHAR(50) DEFAULT NULL,                  -- Часовой пояс
+    timezone VARCHAR(100) DEFAULT NULL,                  -- Часовой пояс
     subjects VARCHAR(500) DEFAULT NULL,                 -- Предметные области
-    job_format VARCHAR(50) DEFAULT NULL,                -- Формат работы
-    project_theme VARCHAR(255) DEFAULT NULL,            -- Тема проекта
-    salary VARCHAR(50) DEFAULT NULL,                    -- Зарплата
+    job_format VARCHAR(250) DEFAULT NULL,                -- Формат работы
+    project_theme VARCHAR(500) DEFAULT NULL,            -- Тема проекта
+    salary VARCHAR(250) DEFAULT NULL,                    -- Зарплата
     responsibilities TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,        -- Обязанности
     requirements TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,            -- Требования
     tasks TEXT CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci,                   -- Задачи
