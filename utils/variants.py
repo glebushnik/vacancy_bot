@@ -29,7 +29,6 @@ available_subject_areas = [
 ]
 variants = [
     "Название вакансии",
-    "Код вакансии",
     "Категория",
     "Название компании",
     "URL компании",
@@ -43,16 +42,14 @@ variants = [
     "Обязанности",
     "Требования",
     "Задачи",
-    "Пожелания",
+    "Доп информация",
     "Бонусы",
     "Контактные данные",
-    "Теги",
     "Вернуться к вакансии"
 ]
 
 data_dict = {
     "Название вакансии": "vacancy_name",
-    "Код вакансии": "vacancy_code",
     "Категория": "category",
     "Название компании": "company_name",
     "URL компании": "company_url",
@@ -66,8 +63,20 @@ data_dict = {
     "Обязанности": "responsibilities",
     "Требования": "requirements",
     "Задачи": "tasks",
-    "Пожелания": "wishes",
+    "Доп информация": "wishes",
     "Бонусы": "bonus",
     "Контактные данные": "contacts",
-    "Теги": "tags"
 }
+common_tags = {
+        'sql': '#SQL',
+        'python': '#Python',
+        'power bi': '#PowerBI',
+        'tableau': '#Tableau',
+        '1с': '#1C',
+        'erp': '#ERP',
+        'crm': '#CRM',
+        'fintech': '#FinTech',
+        'middle': '#Middle',
+        'senior': '#Senior',
+        'удаленно': '#Удаленка'
+    }

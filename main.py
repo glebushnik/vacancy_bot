@@ -5,6 +5,8 @@ from dotenv import load_dotenv
 import mysql.connector
 from mysql.connector import errorcode
 
+from keyboards.inline_row import make_inline_keyboard
+
 # Загружаем переменные окружения из .env файла
 load_dotenv()
 
@@ -15,7 +17,7 @@ from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.filters import CommandStart, Command
 from aiogram import F, Router
-from aiogram.types import Message, ReplyKeyboardRemove
+from aiogram.types import Message, ReplyKeyboardRemove, InlineKeyboardMarkup, InlineKeyboardButton
 from utils import logging_config
 
 # Создаем экземпляр Router для обработки команд и сообщений
@@ -58,12 +60,25 @@ async def command_start_handler(message: Message):
     if message.chat.id < 0:
         pass  # Игнорируем группы и каналы
     else:
-        # Отправляем приветственное сообщение пользователю
         await message.answer(
-            f"Привет, {html.bold(message.from_user.full_name)}!\nЯ — бот, который поможет тебе создать вакансию и опубликовать ее.",
-            reply_markup=ReplyKeyboardRemove())
-        await message.answer("\nВведи /survey, если хочешь начать заполнение.")
+            f"Привет, {html.bold(message.from_user.full_name)}!",
+            reply_markup=ReplyKeyboardRemove()
+        )
 
+        keyboard = InlineKeyboardMarkup(inline_keyboard=[
+            [
+                InlineKeyboardButton(text="Разместить вакансию", callback_data="post_vacancy"),
+                InlineKeyboardButton(text="Правила публикации", callback_data="publication_rules")
+            ],
+            [
+                InlineKeyboardButton(text="Связаться с поддержкой", callback_data="contact_support")
+            ]
+        ])
+
+        await message.answer(
+            text="Я — бот, который поможет тебе создать вакансию и опубликовать её.",
+            reply_markup=keyboard
+        )
 
 # Основная асинхронная функция для запуска бота
 async def main() -> None:
