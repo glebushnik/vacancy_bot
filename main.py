@@ -61,22 +61,22 @@ async def command_start_handler(message: Message):
         pass  # Игнорируем группы и каналы
     else:
         await message.answer(
-            f"Привет, {html.bold(message.from_user.full_name)}!",
+            f"👋 Привет! Я помогу вам разместить вакансию.",
             reply_markup=ReplyKeyboardRemove()
         )
 
         keyboard = InlineKeyboardMarkup(inline_keyboard=[
             [
-                InlineKeyboardButton(text="Разместить вакансию", callback_data="post_vacancy"),
-                InlineKeyboardButton(text="Правила публикации", callback_data="publication_rules")
+                InlineKeyboardButton(text="🆘 Поддержка", callback_data="contact_support"),
+                InlineKeyboardButton(text="📜 Правила", callback_data="publication_rules")
             ],
             [
-                InlineKeyboardButton(text="Связаться с поддержкой", callback_data="contact_support")
+                InlineKeyboardButton(text="📝 Разместить вакансию", callback_data="post_vacancy"),
             ]
         ])
 
         await message.answer(
-            text="Я — бот, который поможет тебе создать вакансию и опубликовать её.",
+            text="Автоматически оформлю текст, подберу теги и проверю данные. Поехали!",
             reply_markup=keyboard
         )
 

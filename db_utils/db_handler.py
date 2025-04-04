@@ -2,163 +2,126 @@ import mysql.connector
 import os
 from mysql.connector import errorcode
 import logging
-# Ограничения длины полей на основе вашей таблицы
+
+# Обновленные ограничения длины для актуальных полей
 FIELD_MAX_LENGTHS = {
-    'vacancy_name': 255,       # VARCHAR(255)
-    'vacancy_code': 50,        # VARCHAR(50)
-    'category': 100,           # VARCHAR(100)
-    'company_name': 255,       # VARCHAR(255)
-    'company_url': 255,        # VARCHAR(255)
-    'grade': 50,               # VARCHAR(50)
-    'location': 255,           # VARCHAR(255)
-    'timezone': 100,           # VARCHAR(100)
-    'subjects': 500,           # VARCHAR(500)
-    'job_format': 250,         # VARCHAR(250)
-    'project_theme': 500,      # VARCHAR(500)
-    'salary': 250,             # VARCHAR(250)
-    'contacts': 255,           # VARCHAR(255)
-    'tags': 255,               # VARCHAR(255)
-    'responsibilities': 65535, # TEXT (максимум 65 535 символов)
-    'requirements': 65535,     # TEXT (максимум 65 535 символов)
-    'tasks': 65535,            # TEXT (максимум 65 535 символов)
-    'wishes': 65535,           # TEXT (максимум 65 535 символов)
-    'bonus': 65535,            # TEXT (максимум 65 535 символов)
+    'vacancy_name': 255,
+    'category': 100,
+    'company_name': 255,
+    'grade': 50,
+    'location': 255,
+    'job_format': 250,
+    'timezone': 100,
+    'subjects': 500,
+    'project_theme': 500,
+    'salary': 250,
+    'requirements': 65535,
+    'tasks': 65535,
+    'bonus': 65535,
+    'wishes': 65535,
+    'additional': 65535,
+    'contacts': 255,
+    'tags': 255,
 }
+
 
 def check_data_length(data):
     for field, max_length in FIELD_MAX_LENGTHS.items():
-        value = data.get(field)
-        if value and len(str(value)) > max_length:
+        if field in data and len(str(data[field])) > max_length:
             return f"Поле '{field}' превышает максимальную длину {max_length} символов."
     return None
 
+
 def check_and_save_job(data):
     try:
-        # Устанавливаем подключение к базе данных
         conn = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME")
         )
-
         cursor = conn.cursor()
 
+        # Проверка существования вакансии
         check_query = """
             SELECT COUNT(*) 
             FROM job 
             WHERE vacancy_name = %s 
             AND company_name = %s 
-            AND grade = %s
+            AND project_theme = %s
         """
         cursor.execute(check_query, (
             data["vacancy_name"],
             data["company_name"],
-            data["grade"]
+            data["project_theme"]
         ))
-        count = cursor.fetchone()[0]
 
-        if count == 0:
-            # Если запись не существует, вставляем новую
-            insert_query = """
-                INSERT INTO job (
-                    vacancy_name, vacancy_code, category, company_name, 
-                    company_url, grade, location, timezone, subjects, 
-                    job_format, project_theme, salary, responsibilities, 
-                    requirements, tasks, wishes, bonus, contacts, tags, is_posted
-                ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, 
-                          %s, %s, %s, %s, %s, %s, %s, %s)
-            """
-            cursor.execute(insert_query, (
-                data['vacancy_name'],
-                data.get('vacancy_code'),  # Может быть None
-                data['category'],
-                data['company_name'],
-                data.get('company_url'),
-                data.get('grade'),
-                data['location'],
-                data['timezone'],
-                data['subjects'],
-                data['job_format'],
-                data['project_theme'],
-                data.get('salary'),
-                data.get('responsibilities'),
-                data.get('requirements'),
-                data.get('tasks'),
-                data.get('wishes'),
-                data.get('bonus'),
-                data['contacts'],
-                data.get('tags'),
-                False
-            ))
-            conn.commit()
-            logging.info(f"Вакансия '{data['vacancy_name']}' успешно сохранена с ID {cursor.lastrowid}.")
-            return True, cursor.lastrowid  # Возвращаем True и ID новой записи
-        else:
-            logging.info(f"Вакансия '{data['vacancy_name']}' уже существует.")
-            return False, "Вакансия уже существует."  # Возвращаем False и сообщение
+        if cursor.fetchone()[0] > 0:
+            logging.warning(f"Дубликат вакансии: {data['vacancy_name']}")
+            return False, "Вакансия уже существует"
+
+        # Вставка только существующих полей
+        insert_query = """
+            INSERT INTO job (
+                vacancy_name, category, company_name, grade, 
+                location, job_format, timezone, subjects, 
+                project_theme, salary, requirements, tasks, 
+                bonus, wishes, additional, contacts, tags, is_posted
+            ) VALUES (
+                %s, %s, %s, %s, %s, %s, %s, %s, 
+                %s, %s, %s, %s, %s, %s, %s, %s, %s, %s
+            )
+        """
+        insert_data = (
+            data['vacancy_name'],
+            data['category'],
+            data['company_name'],
+            data.get('grade'),
+            data['location'],
+            data['job_format'],
+            data['timezone'],
+            data['subjects'],
+            data['project_theme'],
+            data.get('salary'),
+            data.get('requirements'),
+            data.get('tasks'),
+            data.get('bonus'),
+            data.get('wishes'),
+            data.get('additional'),
+            data['contacts'],
+            data.get('tags'),
+            False
+        )
+
+        cursor.execute(insert_query, insert_data)
+        conn.commit()
+        return True, cursor.lastrowid
 
     except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            error_msg = "Ошибка с именем пользователя или паролем"
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            error_msg = "База данных не существует"
-        elif err.errno == errorcode.ER_DUP_ENTRY:
-            error_msg = "дублирующая запись. Вакансия с такими данными уже существует."
-        elif err.errno == errorcode.ER_NO_REFERENCED_ROW:
-            error_msg = "нарушение ссылочной целостности. Проверьте корректность данных."
-        elif err.errno == errorcode.ER_DATA_TOO_LONG:
-            error_msg = "данные слишком длинные для одного из полей."
-        else:
-            error_msg = f"Произошла ошибка при сохранении вакансии: {err}"
-
+        error_msg = f"Ошибка базы данных: {err}"
         logging.error(error_msg)
         return False, error_msg
 
     finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
+
 
 def mark_job_as_posted(job_id):
     try:
-        # Устанавливаем подключение к базе данных
         conn = mysql.connector.connect(
             host=os.getenv("DB_HOST"),
             user=os.getenv("DB_USER"),
             password=os.getenv("DB_PASSWORD"),
             database=os.getenv("DB_NAME")
         )
-
         cursor = conn.cursor()
-
-        update_query = """
-            UPDATE job 
-            SET is_posted = TRUE 
-            WHERE id = %s
-        """
-        cursor.execute(update_query, (job_id,))
+        cursor.execute("UPDATE job SET is_posted = TRUE WHERE id = %s", (job_id,))
         conn.commit()
-
-        if cursor.rowcount > 0:
-            logging.info(f"Вакансия с ID {job_id} успешно помечена как опубликованная.")
-            return True
-        else:
-            logging.warning(f"Вакансия с ID {job_id} не найдена.")
-            return False
-
-    except mysql.connector.Error as err:
-        if err.errno == errorcode.ER_ACCESS_DENIED_ERROR:
-            logging.error("Ошибка с именем пользователя или паролем")
-        elif err.errno == errorcode.ER_BAD_DB_ERROR:
-            logging.error("База данных не существует")
-        else:
-            logging.error(f"Произошла ошибка при обновлении вакансии: {err}")
+        return cursor.rowcount > 0
+    except Exception as e:
+        logging.error(f"Ошибка отметки публикации: {e}")
         return False
-
     finally:
-        if 'cursor' in locals():
-            cursor.close()
-        if 'conn' in locals():
-            conn.close()
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
