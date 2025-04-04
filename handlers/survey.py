@@ -264,7 +264,7 @@ async def vacancy_company_name(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Введите название компании. Например: 'Bell Integrator'."
+                "🏢 Введите название компании. Например: 'Bell Integrator'."
             )
             await state.set_state(VacancySurvey.grade)
         else:
@@ -282,10 +282,14 @@ async def vacancy_grade(message: Message, state: FSMContext):
             await message.answer(
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
+            state = await state.get_state()
+            print(state)
             await message.answer(
-                "Выберите грейд.",
+                "🧑‍💻 Выберите грейд.",
                 reply_markup=make_inline_keyboard(available_grades),
             )
+            state = await state.get_state()
+            print(state)
             await state.set_state(VacancySurvey.location)
         else:
             await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
@@ -318,7 +322,7 @@ async def vacancy_location(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Укажите локацию кандидата.",
+                "🌍 Укажите локацию кандидата.",
                 reply_markup=make_inline_keyboard(available_locations)
             )
             await state.set_state(VacancySurvey.timezone)
@@ -352,7 +356,7 @@ async def vacancy_timezone(message: Message, state: FSMContext):
                 reply_markup=ReplyKeyboardRemove()
             )
             await message.answer(
-                text="Следующий пункт: город и/или часовой пояс."
+                text="🕕 Следующий пункт: город и/или часовой пояс."
             )
             await state.set_state(VacancySurvey.job_format)
         else:
@@ -371,7 +375,7 @@ async def vacancy_job_format(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Выберите формат работы. Например: 'Удалённо', 'Офис' или 'Гибридный'.",
+                "💼 Выберите формат работы. Например: 'Удалённо', 'Офис' или 'Гибридный'.",
                 reply_markup=make_inline_keyboard(available_job_formats)
             )
             await state.set_state(VacancySurvey.subject_area)
@@ -393,7 +397,7 @@ async def vacancy_subject_area(call: CallbackQuery, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await call.message.answer(
-                text="Следующий пункт: предметная область. Это поле обязательное.\n\nДоступные варианты:",
+                text="📊 Следующий пункт: предметная область. Это поле обязательное.\n\nДоступные варианты:",
                 reply_markup=make_inline_keyboard(available_subject_areas)
             )
             await state.set_state(VacancySurvey.choosing_subject_area)
@@ -507,7 +511,7 @@ async def vacancy_salary(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Укажите зарплату. Например: '200-250k Gross' или 'от 150k Net'. Пожалуйста, укажите, Gross это или "
+                "💰 Укажите зарплату. Например: '200-250k Gross' или 'от 150k Net'. Пожалуйста, укажите, Gross это или "
                 "Net."
             )
             await state.set_state(VacancySurvey.requirements)
@@ -527,7 +531,7 @@ async def vacancy_requirements(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Опишите требования к кандидату. Например: 'Опыт работы от 3 лет, знание SQL и Python'.",
+                "🎯 Опишите требования к кандидату. Например: 'Опыт работы от 3 лет, знание SQL и Python'.",
                 parse_mode='HTML'
             )
             await state.set_state(VacancySurvey.tasks)
@@ -547,7 +551,7 @@ async def vacancy_tasks(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Опишите рабочие задачи. Например: 'Разработка ТЗ, анализ бизнес-процессов'."
+                "✅ Опишите рабочие задачи. Например: 'Разработка ТЗ, анализ бизнес-процессов'."
             )
             await state.set_state(VacancySurvey.bonus)
         else:
@@ -566,7 +570,7 @@ async def vacancy_bonus(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             await message.answer(
-                "Опишите условия работы и бонусы. Например: 'Компенсация английского, гибкий график'.",
+                "📌 Опишите условия работы и бонусы. Например: 'Компенсация английского, гибкий график'.",
             )
             await state.set_state(VacancySurvey.wishes)
         else:
@@ -586,7 +590,7 @@ async def vacancy_wishes(message: Message, state: FSMContext):
                 reply_markup=ReplyKeyboardRemove()
             )
             await message.answer(
-                "Введите пожелания.",
+                "✨ Введите пожелания.",
                 reply_markup=ReplyKeyboardMarkup(
                     keyboard=[
                         [
@@ -616,7 +620,7 @@ async def vacancy_additional(message: Message, state: FSMContext):
                 reply_markup=ReplyKeyboardRemove()
             )
             await message.answer(
-                "Укажите дополнительную информацию, если нужно. Например, ссылку на сайт компании или другие детали.",
+                "ℹ️ Укажите дополнительную информацию, если нужно. Например, ссылку на сайт компании или другие детали.",
                 reply_markup=ReplyKeyboardMarkup(
                     keyboard=[
                         [
@@ -646,7 +650,7 @@ async def vacancy_contacts(message: Message, state: FSMContext):
             reply_markup=ReplyKeyboardRemove()
         )
         await message.answer(
-            "Укажите контакты для связи. Например: '@' или 'example@mail.ru'.",
+            "📩 Укажите контакты для связи. Например: '@' или 'example@mail.ru'.",
             reply_markup=ReplyKeyboardRemove()
         )
 
@@ -901,36 +905,28 @@ async def any_message_handler(message: Message, state: FSMContext):
         pass
     else:
         current_state = await state.get_state()
-
+        print(current_state)
         if current_state in ["VacancySurvey:choosing_category", "VacancySurvey:location",
                              "VacancySurvey:choosing_subject_area",
-                             "VacancySurvey:timezone"]:
+                             "VacancySurvey:timezone", "VacancySurvey:job_format", "VacancySurvey:grade", "VacancySurvey:subject_area"]:
             await message.answer("Пожалуйста, используйте кнопки для ввода.", reply_markup=ReplyKeyboardRemove())
 
             if current_state == "VacancySurvey:choosing_category":
                 await vacancy_choose_category(message, state)
-            if current_state == "VacancySurvey:location":
-                await message.answer(
-                    "Выберите грейд. Это поле можно пропустить.",
-                    reply_markup=ReplyKeyboardMarkup(
-                        keyboard=[
-                            [
-                                KeyboardButton(text="Пропустить этот пункт"),
-                            ]
-                        ],
-                        resize_keyboard=True,
-                    ),
-                )
-                await message.answer(
-                    "Доступные варианты грейдов:",
-                    reply_markup=make_inline_keyboard(available_grades),
-                )
-                await state.set_state(VacancySurvey.location)
-
+            if current_state == "VacancySurvey:grade":
+                await vacancy_grade(message, state)
+            if current_state == "VacancySurvey:subject_area":
+                await vacancy_job_format(message,state)
             if current_state == "VacancySurvey:timezone":
                 await vacancy_location(message, state)
             if current_state == "VacancySurvey:choosing_subject_area":
-                await vacancy_subject_area(message, state)
+                class FakeCallback:
+                    def __init__(self):
+                        self.message = message
+                        self.data = "fake_callback_data"
+
+                fake = FakeCallback()
+                await vacancy_subject_area(fake, state)
         else:
             await message.answer(
                 "Я не знаю такой команды,\nнапишите /start"
