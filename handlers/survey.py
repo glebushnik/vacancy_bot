@@ -24,6 +24,7 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 
 class VacancySurvey(StatesGroup):
+    waiting_inline_choice = State()
     additional = State()
     update_edited_field = State()
     edit_field = State()
@@ -107,6 +108,7 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
     elif current_state == "VacancySurvey.grade":
         await vacancy_company_name(message, state)
     elif current_state == "VacancySurvey.location":
+        await state.set_state(VacancySurvey.grade)
         await vacancy_grade(message, state)
     elif current_state == "VacancySurvey.timezone":
         await vacancy_location(message, state)
@@ -237,7 +239,7 @@ async def vacancy_choose_category(message: Message, state: FSMContext):
         await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 
 
-@router.callback_query(F.data.in_(available_categories))
+@router.callback_query(VacancySurvey.choosing_category)
 async def vacancy_category_chosen(call: CallbackQuery, state: FSMContext):
     if call.message.chat.id < 0:
         pass
@@ -283,19 +285,16 @@ async def vacancy_grade(message: Message, state: FSMContext):
                 text="Чтобы вернуться к предыдущему шагу,\nвведите /back"
             )
             state = await state.get_state()
-            print(state)
             await message.answer(
                 "🧑‍💻 Выберите грейд.",
                 reply_markup=make_inline_keyboard(available_grades),
             )
-            state = await state.get_state()
-            print(state)
-            await state.set_state(VacancySurvey.location)
+
         else:
             await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 
 
-@router.callback_query(F.data.in_(available_grades))
+@router.callback_query(VacancySurvey.grade)
 async def vacancy_grade_chosen(call: CallbackQuery, state: FSMContext):
     if call.message.chat.id < 0:
         pass
@@ -312,7 +311,6 @@ async def vacancy_grade_chosen(call: CallbackQuery, state: FSMContext):
             await call.message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 
 
-@router.message(VacancySurvey.location)
 async def vacancy_location(message: Message, state: FSMContext):
     if message.chat.id < 0:
         pass
@@ -330,7 +328,7 @@ async def vacancy_location(message: Message, state: FSMContext):
             await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 
 
-@router.callback_query(F.data.in_(available_locations))
+@router.callback_query(VacancySurvey.timezone)
 async def vacancy_location_chosen(call: CallbackQuery, state: FSMContext):
     if call.message.chat.id < 0:
         pass
@@ -383,14 +381,14 @@ async def vacancy_job_format(message: Message, state: FSMContext):
             await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
 
 
-@router.callback_query(F.data.in_(available_job_formats))
+@router.callback_query(VacancySurvey.subject_area)
 async def vacancy_subject_area(call: CallbackQuery, state: FSMContext):
     if call.message.chat.id < 0:
         pass
     else:
         if call.message.text:
-
-            await state.update_data(job_format=call.data)
+            if call.data != "fake_callback_data":
+                await state.update_data(job_format=call.data)
             global selected_subjects
             selected_subjects = []
             await call.message.answer(
@@ -668,6 +666,7 @@ async def finish_state(message: Message, state: FSMContext):
         await message.reply("Пожалуйста, отправьте текст, а не фото или другой тип данных.")
         return
     data = await state.get_data()
+    print(data)
     if 'contacts' not in data or not data['contacts']:
         if "@" not in message.text:
             await message.answer("Введите ваши контакты через @")
@@ -675,6 +674,7 @@ async def finish_state(message: Message, state: FSMContext):
 
     if message.text != "Выберите поле, которое хотите отредактировать.\n\nДоступные варианты:":
         data['contacts'] = message.text
+        await state.update_data(contacts=message.text)
     result_output = f"Ваша вакансия:\n"
     result = ""
     result += f"🚀 <b>Вакансия</b>: {data['vacancy_name']} ({data['grade']})\n"
@@ -735,7 +735,6 @@ async def finish_state(message: Message, state: FSMContext):
     field_validation = check_data_length(data)
 
     if field_validation is None:
-        print(data)
         status, result = check_and_save_job(data)
         if status:
             job_id = result
@@ -861,7 +860,7 @@ async def edit_field(call: CallbackQuery, state: FSMContext):
             editing_field_key = data_dict[call.data]
             current_value = data.get(editing_field_key)
 
-            if current_value != "":
+            if current_value:
                 await call.message.answer(
                     text=f"Сейчас поле {call.data} выглядит так: {current_value}."
                 )
@@ -870,34 +869,64 @@ async def edit_field(call: CallbackQuery, state: FSMContext):
                     text=f"Сейчас поле {call.data} не заполнено."
                 )
 
-            await state.set_state(VacancySurvey.update_edited_field)
+            # Сохраняем ключ редактируемого поля в состоянии
             await state.update_data(editing_field_key=editing_field_key)
 
-            await call.message.answer(
-                text="Заполните поле заново.",
-                reply_markup=ReplyKeyboardRemove()
-            )
+            # Определяем, какое поле редактируем и настраиваем клавиатуру
+            inline_keyboards = {
+                "Категория": available_categories,
+                "Грейд": available_grades,
+                "Формат работы": available_job_formats,
+                "Предметные области": available_subject_areas,
+                "Локация": available_locations
+            }
+
+            if call.data in inline_keyboards:
+                await call.message.answer(
+                    "Выберите из предложенных вариантов:",
+                    reply_markup=make_inline_keyboard(inline_keyboards[call.data])
+                )
+                # Переходим в состояние ожидания выбора из инлайн-клавиатуры
+                await state.set_state(VacancySurvey.waiting_inline_choice)
+            else:
+                # Для полей с текстовым вводом
+                await call.message.answer(
+                    text="Заполните поле заново:",
+                    reply_markup=ReplyKeyboardRemove()
+                )
+                await state.set_state(VacancySurvey.update_edited_field)
         else:
             await call.message.answer(text="Неизвестное поле для редактирования.")
 
 
+# Обработчик выбора из инлайн-клавиатуры
+@router.callback_query(VacancySurvey.waiting_inline_choice)
+async def handle_inline_choice(call: CallbackQuery, state: FSMContext):
+    data = await state.get_data()
+    editing_field_key = data.get('editing_field_key')
+
+    # Сохраняем выбранное значение
+    await state.update_data(**{editing_field_key: call.data})
+
+    # Удаляем инлайн-клавиатуру
+    await call.message.edit_reply_markup(reply_markup=None)
+
+    await call.message.answer("✅ Значение успешно обновлено!")
+    await state.set_state(VacancySurvey.finish)
+    await edit_vacancy(call.message, state)
+
+
+# Обработчик текстового ввода для полей без инлайн-клавиатуры
 @router.message(VacancySurvey.update_edited_field)
 async def update_edited_field(message: Message, state: FSMContext):
-    if message.chat.id < 0:
-        pass
-    else:
-        data = await state.get_data()
-        editing_field_key = data.get('editing_field_key')
+    data = await state.get_data()
+    editing_field_key = data.get('editing_field_key')
 
-        await state.update_data(**{editing_field_key: message.text})
+    await state.update_data(**{editing_field_key: message.text})
+    await message.reply("✅ Значение успешно обновлено!")
 
-        await message.reply(
-            text="Отлично, сохранил отредактированное поле."
-        )
-
-        await state.set_state(VacancySurvey.finish)
-        await edit_vacancy(message, state)
-
+    await state.set_state(VacancySurvey.finish)
+    await edit_vacancy(message, state)
 
 @router.message(F.text)
 async def any_message_handler(message: Message, state: FSMContext):
