@@ -56,7 +56,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and location == "РФ":
+    ] and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_other"]
     else:
         return CHANNEL["Analyst_job_other_countries"]

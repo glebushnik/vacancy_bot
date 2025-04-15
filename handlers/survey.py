@@ -144,6 +144,7 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
         await vacancy_contacts(message, state)
 
 
+
 @router.message(Command("back"))
 async def back_command(message: Message, state: FSMContext) -> None:
     if message.chat.id < 0:
