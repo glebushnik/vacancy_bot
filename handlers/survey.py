@@ -6,7 +6,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.state import StatesGroup, State
 from aiogram.types import Message, ReplyKeyboardRemove, ReplyKeyboardMarkup
-from db_utils.db_handler import check_and_save_job, mark_job_as_posted, check_data_length
+from db_utils.db_handler import check_and_save_job, mark_job_as_posted, check_data_length, is_job_posted
 from utils.logging_config import setup_logging
 from utils.variants import available_categories, available_grades, available_locations, available_subject_areas, \
     variants, data_dict, common_tags, rules, vacancy_form, help_msg, available_job_formats
@@ -144,7 +144,6 @@ async def send_prompt_for_state(state: FSMContext, message: Message, correct_inp
         await vacancy_contacts(message, state)
 
 
-
 @router.message(Command("back"))
 async def back_command(message: Message, state: FSMContext) -> None:
     if message.chat.id < 0:
@@ -182,6 +181,7 @@ async def send_publication_rules_msg(call: CallbackQuery, state: FSMContext) -> 
         )
     await call.answer()
 
+
 @router.callback_query(F.data == "main_menu")
 async def main_menu_callback(call: CallbackQuery) -> None:
     await call.message.answer(
@@ -204,6 +204,7 @@ async def main_menu_callback(call: CallbackQuery) -> None:
         reply_markup=keyboard
     )
     await call.answer()
+
 
 @router.callback_query(F.data == "contact_support")
 async def send_contact_support_msg(call: CallbackQuery, state: FSMContext) -> None:
@@ -724,11 +725,15 @@ async def finish_state(message: Message, state: FSMContext):
     if data['additional']:
         result += f"ℹ️ <b>Дополнительно</b>:\n" + data['additional'] + "\n\n"
 
-    tags = ""
-    for tag in common_tags:
-        if tag in result.lower():
-            tags += f"{common_tags[tag]} "
+    if "tags" not in data:
+        tags = ""
+        for tag in common_tags:
+            if tag in result.lower():
+                tags += f"{common_tags[tag]} "
+    else:
+        tags = data['tags']
     result += f"{tags}"
+    await state.update_data(tags=tags)
     data['tags'] = tags
     if len(str(result_output + result)) > 4096:
         await message.answer(
@@ -768,8 +773,9 @@ async def finish_state(message: Message, state: FSMContext):
             await state.update_data(job_id=job_id)
             await message.answer("Вакансия успешно сохранена.")
         else:
-            error_message = result
-            await message.answer(f"Ошибка: {error_message}")
+            if is_job_posted(result):
+                error_message = result
+                await message.answer(f"Ошибка: {error_message}")
     else:
         # Если проверка длины не прошла, выводим сообщение об ошибке
         await message.answer(
@@ -949,11 +955,26 @@ async def update_edited_field(message: Message, state: FSMContext):
     data = await state.get_data()
     editing_field_key = data.get('editing_field_key')
 
-    await state.update_data(**{editing_field_key: message.text})
+    current_data = await state.get_data()
+
+    current_data = await state.get_data()
+
+    if editing_field_key == "tags":
+        current_tags = current_data.get("tags", "")
+
+        formatted_new_tags = format_hashtags(message.text, delimiter=' ')
+
+        separator = " " if current_tags else ""
+        new_tags = f"{current_tags}{separator}{formatted_new_tags}".strip()
+
+        await state.update_data(tags=new_tags)
+    else:
+        await state.update_data(**{editing_field_key: message.text})
     await message.reply("✅ Значение успешно обновлено!")
 
     await state.set_state(VacancySurvey.finish)
     await edit_vacancy(message, state)
+
 
 @router.message(F.text)
 async def any_message_handler(message: Message, state: FSMContext):
@@ -964,7 +985,8 @@ async def any_message_handler(message: Message, state: FSMContext):
         print(current_state)
         if current_state in ["VacancySurvey:choosing_category", "VacancySurvey:location",
                              "VacancySurvey:choosing_subject_area",
-                             "VacancySurvey:timezone", "VacancySurvey:job_format", "VacancySurvey:grade", "VacancySurvey:subject_area"]:
+                             "VacancySurvey:timezone", "VacancySurvey:job_format", "VacancySurvey:grade",
+                             "VacancySurvey:subject_area"]:
             await message.answer("Пожалуйста, используйте кнопки для ввода.", reply_markup=ReplyKeyboardRemove())
 
             if current_state == "VacancySurvey:choosing_category":
@@ -972,7 +994,7 @@ async def any_message_handler(message: Message, state: FSMContext):
             if current_state == "VacancySurvey:grade":
                 await vacancy_grade(message, state)
             if current_state == "VacancySurvey:subject_area":
-                await vacancy_job_format(message,state)
+                await vacancy_job_format(message, state)
             if current_state == "VacancySurvey:timezone":
                 await vacancy_location(message, state)
             if current_state == "VacancySurvey:choosing_subject_area":
@@ -1001,3 +1023,20 @@ def post_vacancy(chat_id, result, message_thread_id):
     response = requests.post(url, data=data)
     logging.info(f'Response status code: {response.status_code}')
     logging.info(f'Response body: {response.text}')
+
+
+def format_hashtags(tags: str, delimiter: str = ' ') -> str:
+    tags_list = tags.split(delimiter)
+    processed = []
+
+    for tag in tags_list:
+        clean_tag = tag.strip()
+        if not clean_tag:
+            continue
+
+        if not clean_tag.startswith('#'):
+            processed.append(f"#{clean_tag}")
+        else:
+            processed.append(clean_tag)
+
+    return delimiter.join(processed)

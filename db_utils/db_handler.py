@@ -125,3 +125,27 @@ def mark_job_as_posted(job_id):
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
+
+
+def is_job_posted(job_id: int) -> bool:
+    try:
+        conn = mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME")
+        )
+        cursor = conn.cursor()
+        cursor.execute("SELECT is_posted FROM job WHERE id = %s", (job_id,))
+        result = cursor.fetchone()
+
+        if result:
+            return bool(result[0])
+        return False
+
+    except Exception as e:
+        logging.error(f"Ошибка проверки статуса публикации: {e}")
+        return False
+    finally:
+        if 'cursor' in locals(): cursor.close()
+        if 'conn' in locals(): conn.close()
