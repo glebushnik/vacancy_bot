@@ -167,32 +167,58 @@ async def back_command(message: Message, state: FSMContext) -> None:
 
 @router.callback_query(F.data == "publication_rules")
 async def send_publication_rules_msg(call: CallbackQuery, state: FSMContext) -> None:
-    if call.message.chat.id < 0:
-        pass
-    else:
+    if call.message.chat.id > 0:  # Только в личных чатах
         await call.message.answer(
             text=rules,
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard=[[KeyboardButton(
-                    text="/start"
-                )]]
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(text="← Главное меню", callback_data="main_menu"),
+                        InlineKeyboardButton(text="📝 Начать заполнение", callback_data="post_vacancy")
+                    ]
+                ]
             )
         )
+    await call.answer()
 
+@router.callback_query(F.data == "main_menu")
+async def main_menu_callback(call: CallbackQuery) -> None:
+    await call.message.answer(
+        f"👋 Привет! Я помогу вам разместить вакансию.",
+        reply_markup=ReplyKeyboardRemove()
+    )
+
+    keyboard = InlineKeyboardMarkup(inline_keyboard=[
+        [
+            InlineKeyboardButton(text="🆘 Поддержка", callback_data="contact_support"),
+            InlineKeyboardButton(text="📜 Правила", callback_data="publication_rules")
+        ],
+        [
+            InlineKeyboardButton(text="📝 Разместить вакансию", callback_data="post_vacancy"),
+        ]
+    ])
+
+    await call.message.answer(
+        text="Автоматически оформлю текст, подберу теги и проверю данные. Поехали!",
+        reply_markup=keyboard
+    )
+    await call.answer()
 
 @router.callback_query(F.data == "contact_support")
 async def send_contact_support_msg(call: CallbackQuery, state: FSMContext) -> None:
-    if call.message.chat.id < 0:
-        pass
-    else:
+    if call.message.chat.id > 0:  # Только в личных чатах
         await call.message.answer(
             text=help_msg,
-            reply_markup=ReplyKeyboardMarkup(
-                keyboard=[[KeyboardButton(
-                    text="/start"
-                )]]
+            reply_markup=InlineKeyboardMarkup(
+                inline_keyboard=[
+                    [
+                        InlineKeyboardButton(text="← Главное меню", callback_data="main_menu"),
+                        InlineKeyboardButton(text="📝 Начать заполнение", callback_data="post_vacancy")
+                    ]
+                ]
             )
         )
+    await call.answer()
 
 
 @router.callback_query(F.data == "post_vacancy")

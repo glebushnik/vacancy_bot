@@ -16,7 +16,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and "финтех" in subject_area and location == "РФ":
+    ] and "финтех" in subject_area and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_fintech"]
     elif category in [
         "бизнес-аналитик",
@@ -24,7 +24,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and subject_area in ["e-commerce", "ритейл", "логистика"] and location == "РФ":
+    ] and subject_area in ["e-commerce", "ритейл", "логистика"] and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_retail"]
     elif category in [
         "бизнес-аналитик",
@@ -32,7 +32,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and "medtech" in subject_area and location == "РФ":
+    ] and "medtech" in subject_area and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_medtech"]
     elif category in [
         "бизнес-аналитик",
@@ -40,7 +40,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and "стройтех" in subject_area and location == "РФ":
+    ] and "стройтех" in subject_area and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_proptech"]
     elif category in [
         "бизнес-аналитик",
@@ -48,7 +48,7 @@ def routing(data):
         "системный аналитик",
         "system owner",
         "проектировщик ИТ-решений",
-    ] and "госсистемы" in subject_area and location == "РФ":
+    ] and "госсистемы" in subject_area and location == "🇷🇺 Россия":
         return CHANNEL["Analyst_job_gostech"]
     elif category in [
         "бизнес-аналитик",
@@ -66,11 +66,11 @@ def repeat_sending(data):
     subject_area = data['subjects']
     location = data['location']
 
-    if "medtech" in subject_area and location == "Не важно":
+    if "medtech" in subject_area and location == "🌐 Не важно":
         return CHANNEL["Analyst_job_medtech"]
-    elif "стройтех" in subject_area and location == "Не важно":
+    elif "стройтех" in subject_area and location == "🌐 Не важно":
         return CHANNEL["Analyst_job_proptech"]
-    elif "госсистемы" in subject_area and location == "Не важно":
+    elif "госсистемы" in subject_area and location == "🌐 Не важно":
         return CHANNEL["Analyst_job_gostech"]
     else:
         return None
